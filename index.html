@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simple Phonics V4.0 - Full Chapters</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+
+        /* 發音位顏色 */
+        .p2 { color: #ff0000; font-weight: bold; }
+        .p3 { color: #0000ff; font-weight: bold; }
+        .p4 { color: #00af50; font-weight: bold; }
+        .p5 { color: #ff9900; font-weight: bold; }
+
+        .header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 100; }
+        .header h1 { font-size: 2.5rem; margin: 0; letter-spacing: 1px; }
+        .header h2 { font-size: 1.8rem; margin: 0; color: var(--primary); line-height: 1.2; }
+        .back-btn { position: absolute; left: 15px; top: 35px; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--primary); }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
+        .menu-card { 
+            padding: 25px 10px; background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .menu-card .icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .menu-card .title { font-size: 1.3rem; font-weight: bold; line-height: 1.2; }
+
+        .word-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; justify-content: flex-start; }
+        .word-card {
+            flex: 1 1 calc(33.33% - 10px); 
+            min-width: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-radius: 18px; cursor: pointer; text-align: center;
+            border: 1px solid rgba(0,0,0,0.05); padding: 15px 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .word-card.wide { flex: 1.6 1 calc(50% - 10px); }
+        .word-card:active { transform: scale(0.95); }
+        .card-q { font-size: 1.4rem; margin-bottom: 4px; font-weight: 600; line-height: 1.1; }
+        .card-a { font-size: 1rem; color: #475569; font-weight: 500; }
+
+        .c1 { background-color: #ffe4e6; } .c2 { background-color: #dcfce7; }
+        .c3 { background-color: #fef9c3; } .c4 { background-color: #f3e8ff; }
+        .c5 { background-color: #ffedd5; } .c6 { background-color: #dbeafe; }
+        .c7 { background-color: #fae8ff; } .c8 { background-color: #f0fdfa; }
+        .c9 { background-color: #ece9e6; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div id="chapter-view"><div class="header"><h1>Simple Phonics</h1></div><div id="chapter-list" class="menu-grid"></div></div>
+    <div id="section-view" class="hidden"><div class="header"><button class="back-btn" onclick="showView('chapter-view')">⬅</button><h2 id="chapter-title"></h2></div><div id="section-list" class="menu-grid"></div></div>
+    <div id="word-view" class="hidden"><div class="header"><button class="back-btn" onclick="showView('section-view')">⬅</button><h2 id="section-title"></h2></div><div id="word-list" class="word-container"></div></div>
+</div>
+
+<script>
+    const gameData = {
+        "ch1": { 
+            title: "Chapter 1<br>我的世界", 
+            icon: "👤", 
+            sections: {
+                "body": { 
+                    name: "Body<br>身體", 
+                    words: [
+                        { q: "head", a: "頭", p: "head" },
+                        { q: "hair", a: "頭髮", p: "hair" },
+                        { q: "face", a: "臉孔", p: "face" },
+                        { q: "eye", a: "眼", p: "eye" },
+                        { q: "eyebrow", a: "眉毛", p: "eye<span class='p2'>brow</span>" },
+                        { q: "ear", a: "耳", p: "ear" },
+                        { q: "nose", a: "鼻", p: "nose" },
+                        { q: "mouth", a: "口", p: "mouth" },
+                        { q: "tongue", a: "舌頭", p: "tongue" },
+                        { q: "tooth", a: "牙齒", p: "tooth" },
+                        { q: "lip", a: "嘴唇", p: "lip" },
+                        { q: "neck", a: "頸", p: "neck" },
+                        { q: "back", a: "背部", p: "back" },
+                        { q: "shoulder", a: "肩", p: "shoul<span class='p2'>der</span>" },
+                        { q: "arm", a: "手臂", p: "arm" },
+                        { q: "hand", a: "手", p: "hand" },
+                        { q: "finger", a: "手指", p: "fin<span class='p2'>ger</span>" },
+                        { q: "nail", a: "指甲", p: "nail" },
+                        { q: "butt", a: "屁股", p: "butt" },
+                        { q: "leg", a: "腿", p: "leg" },
+                        { q: "knee", a: "膝蓋", p: "knee" },
+                        { q: "foot", a: "腳", p: "foot" },
+                        { q: "toe", a: "腳趾", p: "toe" },
+                        { q: "skin", a: "皮膚", p: "skin" },
+                        { q: "organ", a: "器官", p: "or<span class='p2'>gan</span>" }
+                    ]
+                },
+                "actions": { 
+                    name: "Actions<br>動作", 
+                    words: [
+                        { q: "speak", a: "說話", p: "speak" },
+                        { q: "shout", a: "大叫", p: "shout" },
+                        { q: "smile", a: "微笑", p: "smile" },
+                        { q: "listen", a: "聽", p: "lis<span class='p2'>ten</span>" },
+                        { q: "see", a: "看到", p: "see" },
+                        { q: "look", a: "看", p: "look" },
+                        { q: "smell", a: "嗅", p: "smell" },
+                        { q: "push", a: "推", p: "push" },
+                        { q: "pull", a: "拉", p: "pull" },
+                        { q: "write", a: "寫", p: "write" },
+                        { q: "do", a: "做", p: "do" },
+                        { q: "stand", a: "站", p: "stand" },
+                        { q: "sit", a: "坐", p: "sit" },
+                        { q: "think", a: "想", p: "think" },
+                        { q: "bring", a: "攜帶", p: "bring" },
+                        { q: "borow", a: "借入", p: "bor<span class='p2'>row</span>" },
+                        { q: "lend", a: "借出", p: "lend" },
+                        { q: "help", a: "幫助", p: "help" },
+                        { q: "cook", a: "煮", p: "cook" }
+                    ]
+                },
+                "family": { 
+                    name: "Family<br>家庭", 
+                    words: [
+                        { q: "father", a: "爸爸", p: "fa<span class='p2'>ther</span>" },
+                        { q: "mother", a: "媽媽", p: "mo<span class='p2'>ther</span>" },
+                        { q: "elder brother", a: "哥哥", p: "el<span class='p2'>der</span> brother" },
+                        { q: "younger brother", a: "弟弟", p: "youn<span class='p2'>ger</span> brother" },
+                        { q: "elder sister", a: "姊姊", p: "el<span class='p2'>der</span> sis<span class='p2'>ter</span>" },
+                        { q: "younger sister", a: "妹妹", p: "youn<span class='p2'>ger</span> sis<span class='p2'>ter</span>" },
+                        { q: "son", a: "兒子", p: "son" },
+                        { q: "daughter", a: "女兒", p: "daugh<span class='p2'>ter</span>" },
+                        { q: "uncle", a: "叔叔", p: "un<span class='p2'>cle</span>" },
+                        { q: "aunt", a: "姨姨", p: "aunt" },
+                        { q: "grandfather", a: "祖父／外祖父", p: "grand<span class='p2'>fa</span>ther" },
+                        { q: "grandmother", a: "祖母／外祖母", p: "grand<span class='p2'>mo</span>ther" },
+                        { q: "grandson", a: "孫兒／外孫兒", p: "grand<span class='p2'>son</span>" },
+                        { q: "granddaughter", a: "孫女／外孫女", p: "grand<span class='p2'>daugh</span>ter" },
+                        { q: "baby", a: "嬰兒", p: "ba<span class='p2'>by</span>" },
+                        { q: "parents", a: "父母", p: "pa<span class='p2'>rents</span>" },
+                        { q: "couples", a: "夫婦", p: "cou<span class='p2'>ples</span>" },
+                        { q: "husband", a: "丈夫", p: "hus<span class='p2'>band</span>" },
+                        { q: "wife", a: "妻子", p: "wife" },
+                        { q: "cousin", a: "表親／堂親", p: "cou<span class='p2'>sin</span>" },
+                        { q: "nephew", a: "侄兒／外甥", p: "ne<span class='p2'>phew</span>" },
+                        { q: "niece", a: "侄女／外甥女", p: "niece" }
+                    ]
+                },
+                "introduction": { 
+                    name: "Introduction<br>介紹", 
+                    words: [
+                        { q: "boy", a: "男孩", p: "boy" },
+                        { q: "girl", a: "女孩", p: "girl" },
+                        { q: "man", a: "男人", p: "man" },
+                        { q: "woman", a: "女人", p: "wo<span class='p2'>man</span>" },
+                        { q: "he", a: "他", p: "he" },
+                        { q: "she", a: "她", p: "she" },
+                        { q: "old", a: "年老的", p: "old" },
+                        { q: "young", a: "年輕的", p: "young" },
+                        { q: "love", a: "愛", p: "love" },
+                        { q: "cute", a: "可愛的", p: "cute" },
+                        { q: "gentle", a: "溫柔的", p: "gen<span class='p2'>tle</span>" },
+                        { q: "clever", a: "聰明的", p: "cle<span class='p2'>ver</span>" },
+                        { q: "beautiful", a: "美麗的", p: "beau<span class='p2'>ti</span>ful" },
+                        { q: "strong", a: "強壯的", p: "strong" },
+                        { q: "hardworking", a: "勤力的", p: "hard<span class='p2'>work</span>ing" },
+                        { q: "kind", a: "善良的", p: "kind" },
+                        { q: "naughty", a: "頑皮的", p: "naugh<span class='p2'>ty</span>" },
+                        { q: "brave", a: "勇敢的", p: "brave" }
+                    ]
+                },
+                "birthday": { 
+                    name: "Birthday<br>生日", 
+                    words: [
+                        { q: "party", a: "派對", p: "par<span class='p2'>ty</span>" },
+                        { q: "cake", a: "蛋糕", p: "cake" },
+                        { q: "cream", a: "忌廉", p: "cream" },
+                        { q: "balloon", a: "氣球", p: "bal<span class='p2'>loon</span>" },
+                        { q: "blow", a: "吹", p: "blow" },
+                        { q: "candle", a: "蠟燭", p: "can<span class='p2'>dle</span>" },
+                        { q: "give", a: "給", p: "give" },
+                        { q: "present", a: "禮物", p: "pre<span class='p2'>sent</span>" },
+                        { q: "clap", a: "拍手", p: "clap" },
+                        { q: "sing", a: "唱", p: "sing" },
+                        { q: "laugh", a: "笑", p: "laugh" },
+                        { q: "eat", a: "吃", p: "eat" },
+                        { q: "drink", a: "喝", p: "drink" }
+                    ]
+                },
+                "feeling": { 
+                    name: "Feeling<br>感覺及情感", 
+                    words: [
+                        { q: "hungry", a: "肚餓", p: "hun<span class='p2'>gry</span>" },
+                        { q: "thirsty", a: "口渴", p: "thirs<span class='p2'>ty</span>" },
+                        { q: "sleepy", a: "想睡", p: "slee<span class='p2'>py</span>" },
+                        { q: "tired", a: "疲倦", p: "tired" },
+                        { q: "itchy", a: "發癢", p: "itchy" },
+                        { q: "happy", a: "快樂", p: "hap<span class='p2'>py</span>" },
+                        { q: "glad", a: "高興", p: "glad" },
+                        { q: "surprised", a: "驚訝", p: "sur<span class='p2'>prised</span>" },
+                        { q: "excited", a: "刺激", p: "ex<span class='p2'>cit</span>ed" },
+                        { q: "sad", a: "傷心", p: "sad" },
+                        { q: "angry", a: "怒", p: "an<span class='p2'>gry</span>" },
+                        { q: "shy", a: "害羞", p: "shy" },
+                        { q: "afraid", a: "害怕", p: "a<span class='p2'>fraid</span>" },
+                        { q: "frightened", a: "受驚", p: "fright<span class='p2'>ened</span>" },
+                        { q: "ashamed", a: "羞愧", p: "a<span class='p2'>shamed</span>" },
+                        { q: "disappointed", a: "失望", p: "dis<span class='p2'>ap</span>poin<span class='p2'>ted</span>" },
+                        { q: "bored", a: "無聊", p: "bored" },
+                        { q: "confused", a: "迷茫", p: "con<span class='p2'>fused</span>" },
+                        { q: "jealous", a: "妒忌", p: "jea<span class='p2'>lous</span>" },
+                        { q: "lonely", a: "孤獨", p: "lone<span class='p2'>ly</span>" }
+                    ]
+                }
+            }
+        },
+        "ch2": { title: "Chapter 2<br>房屋設備", icon: "🏠", sections: {
+            "house": { name: "House 房子", words: [{q:"door",a:"門",p:"door"},{q:"window",a:"窗",p:"win<span class='p2'>dow</span>"}]},
+            "living": { name: "Living Room 客廳", words: [{q:"sofa",a:"梳化",p:"sofa"},{q:"table",a:"桌子",p:"table"}]}
+        }},
+        "ch3": { title: "Chapter 3<br>飲飲食食", icon: "🍎", sections: {
+            "fruits": { name: "Fruits 水果", words: [{q:"apple",a:"蘋果",p:"apple"},{q:"banana",a:"香蕉",p:"ba<span class='p2'>na</span>na"}]},
+            "drinks": { name: "Drinks 飲品", words: [{q:"water",a:"水",p:"wa<span class='p2'>ter</span>"},{q:"milk",a:"奶",p:"milk"}]}
+        }},
+        "ch4": { title: "Chapter 4<br>從早到晚", icon: "⌚", sections: {
+            "time": { name: "Time 時間", words: [{q:"morning",a:"早晨",p:"mor<span class='p2'>ning</span>"},{q:"night",a:"晚上",p:"night"}]}
+        }},
+        "ch5": { title: "Chapter 5<br>出去走走", icon: "🚶", sections: {
+            "zoo": { name: "Zoo 動物園", words: [{q:"tiger",a:"老虎",p:"ti<span class='p2'>ger</span>"},{q:"lion",a:"獅子",p:"lion"}]}
+        }},
+        "ch6": { title: "Chapter 6<br>樂在其中", icon: "🧸", sections: {
+            "sports": { name: "Sports 運動", words: [{q:"football",a:"足球",p:"foot<span class='p2'>ball</span>"}]}
+        }},
+        "ch7": { title: "Chapter 7<br>好好學習", icon: "✏️", sections: {
+            "shape": { name: "Shape 形狀", words: [{q:"square",a:"正方形",p:"square"},{q:"triangle",a:"三角形",p:"tri<span class='p2'>angle</span>"}]}
+        }},
+        "ch8": { title: "Chapter 8<br>遊山玩水", icon: "🏞️", sections: {
+            "weather": { name: "Weather 天氣", words: [{q:"sunny",a:"晴朗",p:"sun<span class='p2'>ny</span>"},{q:"rainy",a:"多雨",p:"rai<span class='p2'>ny</span>"}]}
+        }}
+    };
+
+    const colorClasses = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9'];
+    let currentChKey = "";
+
+    function showView(id) { 
+        document.querySelectorAll('.app-container > div').forEach(div => div.classList.add('hidden')); 
+        document.getElementById(id).classList.remove('hidden'); 
+    }
+
+    function initChapters() {
+        const list = document.getElementById('chapter-list'); list.innerHTML = "";
+        Object.keys(gameData).forEach(key => { 
+            list.innerHTML += `<div class="menu-card" onclick="openChapter('${key}')"><div class="icon">${gameData[key].icon}</div><div class="title">${gameData[key].title}</div></div>`; 
+        });
+    }
+
+    function openChapter(key) {
+        currentChKey = key; const ch = gameData[key]; 
+        document.getElementById('chapter-title').innerHTML = ch.title;
+        const list = document.getElementById('section-list'); list.innerHTML = "";
+        Object.keys(ch.sections).forEach(secKey => { 
+            list.innerHTML += `<div class="menu-card" onclick="openSection('${secKey}')"><div class="title">${ch.sections[secKey].name}</div></div>`; 
+        });
+        showView('section-view');
+    }
+
+    function openSection(secKey) {
+        const sec = gameData[currentChKey].sections[secKey]; 
+        document.getElementById('section-title').innerHTML = sec.name;
+        const list = document.getElementById('word-list'); list.innerHTML = "";
+        sec.words.forEach((w, i) => { 
+            const isLong = w.q.length > 6;
+            const wideClass = isLong ? 'wide' : '';
+            list.innerHTML += `<div class="word-card ${colorClasses[i % 9]} ${wideClass}" onclick="speak('${w.q}')"><div class="card-q">${w.p}</div><div class="card-a">${w.a}</div></div>`; 
+        });
+        showView('word-view');
+    }
+
+    function speak(text) { window.speechSynthesis.cancel(); const msg = new SpeechSynthesisUtterance(text); msg.lang = 'en-US'; window.speechSynthesis.speak(msg); }
+    initChapters();
+</script>
+</body>
+</html>
