@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple Phonics V7.4 - Slim UI</title>
+    <title>Simple Phonics V7.7</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
         body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
@@ -12,64 +12,44 @@
         .header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 100; }
         .header h1 { font-size: 2.5rem; margin: 0; letter-spacing: 1px; cursor: pointer; user-select: none; }
         
-        /* 簡介按鈕 */
         .intro-btn { background: #f1f5f9; color: var(--primary); border: 2px solid #e2e8f0; padding: 8px 20px; border-radius: 20px; font-size: 1rem; margin-top: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         
-        /* 彈出視窗 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-box { background: white; border-radius: 20px; padding: 25px; max-height: 85vh; overflow-y: auto; width: 100%; max-width: 420px; line-height: 1.7; position: relative; }
+        .modal-box h3 { margin-top: 20px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px; }
         .modal-close-btn { background: var(--primary); color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; margin-top: 15px; cursor: pointer; }
 
-        /* 選單網格 */
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
-        
-        /* 修改：減低主頁框的高度 */
-        .menu-card { 
-            padding: 15px 10px; /* 原本是 25px，現在減至 15px */
-            background: #fff; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-        }
+        .menu-card { padding: 8px 10px; background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 80px; }
         .menu-card.special { border-color: var(--accent); background: #fffbeb; }
-        .menu-card .icon { font-size: 2.2rem; margin-bottom: 5px; } /* 略微縮小圖標 */
-        .menu-card .title { font-size: 1.2rem; font-weight: bold; }
+        .menu-card .icon { font-size: 2.0rem; margin-bottom: 2px; }
+        .menu-card .title { font-size: 1.1rem; font-weight: bold; }
 
-        /* CVC / Digraphs 特殊顯示樣式 */
         .section-box { padding: 15px; border-bottom: 1px solid #f1f5f9; }
         .section-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #eee; }
+        
+        /* 補回：CVC及Digraphs 內的 Heading 顏色 */
+        #special-content .section-name { font-size: 1.3rem; font-weight: bold; color: #1e40af; }
         .section-name { font-size: 1.3rem; font-weight: bold; color: #334155; }
-        .play-all-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; }
+        
+        /* 補回：詞語顏色定義 */
+        .p1 { color: #000; font-weight: bold; } 
+        .p2 { color: #f00; font-weight: bold; } 
+        .p3 { color: #00f; font-weight: bold; }
+
         .inline-word-list { font-size: 1.5rem; line-height: 2.3; color: #475569; font-weight: bold; }
         .word-item { cursor: pointer; display: inline-block; padding: 0 8px; border-radius: 5px; }
         .word-item .meaning { font-size: 0.95rem; color: #94a3b8; margin-left: 3px; font-weight: normal; }
         .highlight { background-color: #fef9c3 !important; color: var(--accent) !important; }
 
-        /* 詞語卡片樣式 */
         .word-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; }
         .word-card { flex: 1 1 calc(33.33% - 10px); min-width: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 18px; cursor: pointer; text-align: center; padding: 15px 5px; border: 1px solid rgba(0,0,0,0.05); font-weight: bold; } 
         .card-q { font-size: 1.8rem; margin-bottom: 5px; }
         .card-a { font-size: 1rem; color: #475569; font-weight: normal; }
 
-        /* 返回按鈕樣式 (大箭頭) */
-        .back-btn { 
-            position: absolute; 
-            left: 10px; 
-            top: 25px; 
-            background: none; 
-            border: none; 
-            font-size: 2.5rem; 
-            color: var(--primary); 
-            cursor: pointer; 
-            z-index: 101; 
-        }
-
-        .p1 { color: #000; font-weight: bold; } .p2 { color: #f00; font-weight: bold; } .p3 { color: #00f; font-weight: bold; }
+        .back-btn { position: absolute; left: 10px; top: 25px; background: none; border: none; font-size: 2.5rem; color: var(--primary); cursor: pointer; z-index: 101; }
+        .play-all-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; }
+        
         .c1 { background-color: #ffe4e6; } .c2 { background-color: #dcfce7; } .c3 { background-color: #fef9c3; } .c4 { background-color: #f3e8ff; } 
         .c5 { background-color: #ffedd5; } .c6 { background-color: #dbeafe; } .c7 { background-color: #fae8ff; } .c8 { background-color: #f0fdfa; }
     </style>
@@ -87,7 +67,8 @@
     <div id="special-view" class="hidden">
         <div class="header">
             <button class="back-btn" onclick="showView('home-view')">⬅</button>
-            <h2 id="special-title"></h2>
+            <h2 id="special-title" style="display:inline-block;"></h2>
+            <button id="special-play-all-btn" class="play-all-btn" style="margin-left:10px; vertical-align:middle;">▶ 播放全部</button>
         </div>
         <div id="special-content"></div>
     </div>
@@ -103,8 +84,8 @@
     <div id="word-view" class="hidden">
         <div class="header">
             <button class="back-btn" onclick="showView('section-view')">⬅</button>
-            <h2 id="section-title"></h2>
-            <button id="section-play-btn" style="display:inline-block; background:var(--primary); color:white; border:none; padding:5px 12px; border-radius:15px; cursor:pointer; font-size:0.9rem; margin-left:10px; vertical-align:middle;">▶ 播放全部</button>
+            <h2 id="section-title" style="display:inline-block;"></h2>
+            <button id="section-play-btn" class="play-all-btn" style="margin-left:10px; vertical-align:middle;">▶ 播放全部</button>
         </div>
         <div id="word-list" class="word-container"></div>
     </div>
@@ -112,8 +93,16 @@
 
 <div id="intro-modal" class="modal-overlay hidden">
     <div class="modal-box">
+        <h3>簡介</h3>
+        <p>學習拼音（Phonics），能夠認識字母及其發音（sounds）的關係，從而提昇英語發音、拼讀和串字能力，而不需要只靠死記硬背生字的串法和讀音。</p>
+        <p>然而，拼音絕對不是萬能的，英文中約只有70%的生字是能用拼音規則（Phonics rules）去拼讀出來，故此即使學懂了也不能完全認讀所有英文生字；有約30%的英文生字，仍是要靠記憶去認讀的。</p>
+        
         <h3>學習步驟</h3>
-        <p>1. 學習A至Z發音。<br>2. 拼讀CVC單字。<br>3. 學習組合音Digraphs。</p>
+        <p>
+            1. 學習A至Z的Phonics sounds。<br>
+            2. 拼讀CVC（consonant vowel consonant），即包含三個字母的單字（例：cat, dog, pig）。<br>
+            3. 學習Digraphs，即由兩個字母組成的音（如sh, th, ch等）。拼讀更多以不同音素組成的單字（如chip, short, chain等）。
+        </p>
         <button class="modal-close-btn" onclick="toggleModal(false)">關閉</button>
     </div>
 </div>
@@ -143,7 +132,7 @@
 
     window.toggleModal = (show) => { document.getElementById('intro-modal').classList.toggle('hidden', !show); }
     window.syncToFirebase = async function() { try { await setDoc(doc(db, "gameConfig", "content"), gameData); alert("✅ 同步成功！"); } catch (e) { alert("❌ 同步失敗"); } }
-    window.showView = (id) => { if (currentAbortController) currentAbortController.abort = true; document.querySelectorAll('.app-container > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    window.showView = (id) => { if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; } document.querySelectorAll('.app-container > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     
     function renderHome() { 
         const menu = document.getElementById('main-menu');
@@ -154,18 +143,22 @@
             </div>`).join('');
     }
 
-    window.route = (key) => { 
-        currentChKey = key; 
-        if (key === 'cvc' || key === 'digraphs') { renderSpecial(key); } else { renderChapter(key); }
-    }
+    window.route = (key) => { currentChKey = key; if (key === 'cvc' || key === 'digraphs') { renderSpecial(key); } else { renderChapter(key); } }
 
     function renderSpecial(key) {
-        const item = gameData[key]; 
-        document.getElementById('special-title').innerHTML = item.title;
-        document.getElementById('special-content').innerHTML = (item.sections || []).map((sec, sIdx) => {
-            let wordsHtml = sec.words.map((w, wIdx) => `<span class="word-item" id="sp-${key}-${sIdx}-${wIdx}" onclick="speak('${w.q}')">${w.q}<span class="meaning">${w.a}</span></span>`).join(' ');
-            return `<div class="section-box"><div class="section-title-row"><span class="section-name">${sec.name}</span><button class="play-all-btn" onclick="playAllWords(this, ${JSON.stringify(sec.words).replace(/"/g, '&quot;')}, '${key}-${sIdx}')">▶ 播放全部</button></div><div class="inline-word-list">${wordsHtml}</div></div>`;
+        const item = gameData[key]; document.getElementById('special-title').innerHTML = item.title;
+        let allWords = [];
+        let html = (item.sections || []).map((sec, sIdx) => {
+            let wordsHtml = sec.words.map((w, wIdx) => {
+                const globalIdx = allWords.length; allWords.push(w);
+                return `<span class="word-item" id="sp-item-${globalIdx}" onclick="speak('${w.q}')">${w.p || w.q}<span class="meaning">${w.a}</span></span>`;
+            }).join(' ');
+            return `<div class="section-box"><div class="section-title-row"><span class="section-name">${sec.name}</span></div><div class="inline-word-list">${wordsHtml}</div></div>`;
         }).join('');
+        const playBtn = document.getElementById('special-play-all-btn');
+        playBtn.onclick = () => playAllWords(playBtn, allWords, 'sp-item');
+        playBtn.innerHTML = "▶ 播放全部";
+        document.getElementById('special-content').innerHTML = html;
         showView('special-view');
     }
 
@@ -178,24 +171,22 @@
     }
 
     window.openSection = (secKey) => {
-        const item = gameData[currentChKey];
-        const sec = item.sections[secKey];
+        const item = gameData[currentChKey]; const sec = item.sections[secKey];
         document.getElementById('section-title').innerHTML = sec.name;
         const btn = document.getElementById('section-play-btn');
         btn.onclick = () => playAllWords(btn, sec.words, 'card');
+        btn.innerHTML = "▶ 播放全部";
         document.getElementById('word-list').innerHTML = sec.words.map((w, i) => `<div id="card-${i}" class="word-card ${colors[i % 8]}" onclick="speak('${w.q}')"><div class="card-q">${w.p || w.q}</div><div class="card-a">${w.a}</div></div>`).join('');
         showView('word-view');
     }
 
-    window.playAllWords = async function(btn, words, typePrefix) {
-        if (currentAbortController) { currentAbortController.abort = true; return; }
+    window.playAllWords = async function(btn, words, idPrefix) {
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.innerHTML = "▶ 播放全部"; return; }
         const controller = { abort: false }; currentAbortController = controller; btn.innerHTML = "⏹ 停止";
         for (let i = 0; i < words.length; i++) {
             if (controller.abort) break;
-            const elId = typePrefix === 'card' ? `card-${i}` : `sp-${typePrefix}-${i}`; 
-            const el = document.getElementById(elId);
-            if (el) el.classList.add('highlight'); 
-            speak(words[i].q);
+            const elId = `${idPrefix}-${i}`; const el = document.getElementById(elId);
+            if (el) el.classList.add('highlight'); speak(words[i].q);
             await new Promise(r => setTimeout(r, 1600));
             if (el) el.classList.remove('highlight');
         }
