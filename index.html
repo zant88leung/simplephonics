@@ -19,10 +19,35 @@
         .main-logo-container { width: 100%; padding: 0; line-height: 0; margin: 0; cursor: pointer; display: block; }
         .main-logo { width: 100%; height: auto; display: block; }
         .c-1 { color: #000000 !important; } .c-2 { color: #007bff !important; } .c-3 { color: #ff8800 !important; } .c-4 { color: #28a745 !important; } .c-5 { color: #9333ea !important; } .c-6 { color: #7a3a12 !important; } .u { text-decoration: underline !important; text-underline-offset: 4px; text-decoration-thickness: 3px; }
+        
+        /* --- 修正後的圖示格線部分 --- */
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
-        .menu-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; min-height: 100px; }
-        .menu-card.small-icon { min-height: 75px !important; height: 75px !important; } 
-        .menu-card img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .menu-card { 
+            background: #fff; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            height: auto; /* 移除固定的 min-height */
+        }
+        
+        .menu-card.small-icon { 
+            height: auto !important; 
+            min-height: unset !important; /* 確保不被撐開 */
+        } 
+        
+        .menu-card img { 
+            width: 100%; 
+            height: auto; /* 讓高度隨寬度自動等比例縮放 */
+            display: block; 
+            object-fit: contain; 
+        }
+        /* ----------------------- */
+
         .section-box { padding: 15px; border-bottom: 1px solid #f1f5f9; }
         .inline-word-list { font-size: 1.5rem !important; line-height: 2.3 !important; font-weight: bold !important; }
         .word-item { cursor: pointer; display: inline-block; padding: 0 10px; color: #1e293b; font-weight: bold !important; border-radius: 8px; }
@@ -114,7 +139,6 @@
     let currentAbortController = null; 
     let clickCount = 0;
 
-    // --- 關鍵：將函式掛載到 window ---
     window.toggleModal = (show) => { document.getElementById('intro-modal').classList.toggle('hidden', !show); };
     window.showView = (id) => { 
         if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; } 
@@ -129,25 +153,24 @@
     };
 
     window.renderSpecial = (k) => {
-    const item = gameData[k] || { sections: [] };
-    let wordsAll = [];
-    let globalIdx = 0;
-    document.getElementById('special-heading-text').innerText = chapterNames[k];
-    const contentHtml = (item.sections || []).map(sec => {
-        const startIdx = globalIdx;
-        let ws = (sec.words || []).map(w => {
-            const idx = globalIdx++;
-            wordsAll.push(w);
-            // 修改這裡：加入 ${p.u ? 'u' : ''}
-            let displayText = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : (w.p || w.q);
-            return `<span class="word-item" id="sp-${idx}" onclick="window.speak('${w.q}')">${displayText}<span class="word-mean">${w.a}</span></span>`;
-        }).join(' ');
-        return `<div class="section-box"><span style="color:#ad4f26; font-size:1.3rem; font-weight:bold; cursor:pointer;" onclick="window.playSection(${startIdx}, ${globalIdx})">${sec.name}</span><div class="inline-word-list">${ws}</div></div>`;
-    }).join('');
-    document.getElementById('special-content').innerHTML = contentHtml;
-    document.getElementById('special-play-all-img').onclick = function() { window.playAll(this, wordsAll, 'sp', 'highlight-text'); };
-    window.showView('special-view');
-};
+        const item = gameData[k] || { sections: [] };
+        let wordsAll = [];
+        let globalIdx = 0;
+        document.getElementById('special-heading-text').innerText = chapterNames[k];
+        const contentHtml = (item.sections || []).map(sec => {
+            const startIdx = globalIdx;
+            let ws = (sec.words || []).map(w => {
+                const idx = globalIdx++;
+                wordsAll.push(w);
+                let displayText = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : (w.p || w.q);
+                return `<span class="word-item" id="sp-${idx}" onclick="window.speak('${w.q}')">${displayText}<span class="word-mean">${w.a}</span></span>`;
+            }).join(' ');
+            return `<div class="section-box"><span style="color:#ad4f26; font-size:1.3rem; font-weight:bold; cursor:pointer;" onclick="window.playSection(${startIdx}, ${globalIdx})">${sec.name}</span><div class="inline-word-list">${ws}</div></div>`;
+        }).join('');
+        document.getElementById('special-content').innerHTML = contentHtml;
+        document.getElementById('special-play-all-img').onclick = function() { window.playAll(this, wordsAll, 'sp', 'highlight-text'); };
+        window.showView('special-view');
+    };
 
     window.renderChapterList = (k) => {
         const item = gameData[k] || {sections:{}};
@@ -160,29 +183,25 @@
         window.showView('section-view');
     };
 
- window.openSection = (sk) => {
-    const sec = gameData[currentChKey].sections[sk];
-    if (!sec) return; // 安全檢查
-    document.getElementById('section-heading-text').innerText = sec.name;
-    document.getElementById('word-list').innerHTML = (sec.words || []).map((w, i) => {
-        // 修改這裡：將 p.s 改為 p.u
-        let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : w.q;
-        return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="card-q">${h}</div><div class="card-a">${w.a}</div></div>`;
-    }).join('');
-    document.getElementById('word-play-all-img').onclick = function() { window.playAll(this, sec.words, 'card', 'highlight-card'); };
-    window.showView('word-view');
-};
+    window.openSection = (sk) => {
+        const sec = gameData[currentChKey].sections[sk];
+        if (!sec) return;
+        document.getElementById('section-heading-text').innerText = sec.name;
+        document.getElementById('word-list').innerHTML = (sec.words || []).map((w, i) => {
+            let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : w.q;
+            return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="card-q">${h}</div><div class="card-a">${w.a}</div></div>`;
+        }).join('');
+        document.getElementById('word-play-all-img').onclick = function() { window.playAll(this, sec.words, 'card', 'highlight-card'); };
+        window.showView('word-view');
+    };
 
-    // 優化後的語音函式
     window.speak = (t) => {
         window.speechSynthesis.cancel();
         const m = new SpeechSynthesisUtterance(t);
         m.lang = 'en-US';
         m.rate = 0.85;
-        
         const voices = window.speechSynthesis.getVoices();
         const femaleVoice = voices.find(v => (v.name.includes('Google') && v.name.includes('Female')) || v.name.includes('Samantha') || v.name.includes('Zira'));
-        
         if (femaleVoice) m.voice = femaleVoice;
         window.speechSynthesis.speak(m);
     };
@@ -223,28 +242,22 @@
         clickCount++; if(clickCount >= 5) document.getElementById('sync-btn').classList.remove('hidden');
     };
 
-async function loadData() {
-    const docRef = doc(db, "gameConfig", "content");
-    try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            // 關鍵修改：將 Firebase 的完整數據賦值給 gameData
-            const cloudData = docSnap.data();
-            gameData = cloudData;
-            
-            // 數據加載完成後，才進行首次渲染，防止白畫面
+    async function loadData() {
+        const docRef = doc(db, "gameConfig", "content");
+        try {
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                gameData = docSnap.data();
+                renderHome();
+                console.log("數據同步成功");
+            } else {
+                renderHome(); 
+            }
+        } catch (e) {
+            console.error("加載失敗:", e);
             renderHome();
-            console.log("數據同步成功");
-        } else {
-            console.error("Firebase 中找不到數據！");
-            // 如果雲端沒數據，至少渲染主頁防止白畫面
-            renderHome(); 
         }
-    } catch (e) {
-        console.error("加載失敗:", e);
-        renderHome();
     }
-}
 
     function renderHome() {
         const menu = document.getElementById('main-menu');
@@ -254,12 +267,8 @@ async function loadData() {
         }).join('');
     }
 
-    // 新增：強制預載入語音，解決第一次發音問題
-    window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-    };
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     window.speechSynthesis.getVoices();
-
     loadData();
 </script>
 
