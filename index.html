@@ -3,89 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple Phonics V7.7</title>
+    <title>Simple Phonics V14.9 - Final Fix</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
+        :root { --primary: #651caa; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
         body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
-        .header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 100; }
-        .header h1 { font-size: 2.5rem; margin: 0; letter-spacing: 1px; cursor: pointer; user-select: none; }
-        
-        .intro-btn { background: #f1f5f9; color: var(--primary); border: 2px solid #e2e8f0; padding: 8px 20px; border-radius: 20px; font-size: 1rem; margin-top: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-box { background: white; border-radius: 20px; padding: 25px; max-height: 85vh; overflow-y: auto; width: 100%; max-width: 420px; line-height: 1.7; position: relative; }
-        .modal-box h3 { margin-top: 20px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px; }
-        .modal-close-btn { background: var(--primary); color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; margin-top: 15px; cursor: pointer; }
-
+        .header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 100; min-height: 65px; box-sizing: border-box; }
+        .back-area, .play-area { width: 80px; display: flex; }
+        .back-area { justify-content: flex-start; }
+        .play-area { justify-content: flex-end; }
+        .img-btn { height: 40px !important; width: auto !important; cursor: pointer; object-fit: contain; }
+        .heading-area { flex: 1; display: flex; justify-content: center; align-items: center; text-align: center; }
+        .heading-text { font-size: 1.3rem; font-weight: bold; color: #4b0082; line-height: 1.2; }
+        .main-logo-container { width: 100%; padding: 0; line-height: 0; margin: 0; cursor: pointer; display: block; }
+        .main-logo { width: 100%; height: auto; display: block; }
+        .c-1 { color: #000000 !important; } .c-2 { color: #007bff !important; } .c-3 { color: #ff8800 !important; } .c-4 { color: #28a745 !important; } .c-5 { color: #9333ea !important; } .c-6 { color: #7a3a12 !important; } .u { text-decoration: underline !important; text-underline-offset: 4px; text-decoration-thickness: 3px; }
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
-        .menu-card { padding: 8px 10px; background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 80px; }
-        .menu-card.special { border-color: var(--accent); background: #fffbeb; }
-        .menu-card .icon { font-size: 2.0rem; margin-bottom: 2px; }
-        .menu-card .title { font-size: 1.1rem; font-weight: bold; }
-
+        .menu-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; min-height: 100px; }
+        .menu-card.small-icon { min-height: 75px !important; height: 75px !important; } 
+        .menu-card img { width: 100%; height: 100%; object-fit: cover; }
         .section-box { padding: 15px; border-bottom: 1px solid #f1f5f9; }
-        .section-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #eee; }
-        
-        /* 補回：CVC及Digraphs 內的 Heading 顏色 */
-        #special-content .section-name { font-size: 1.3rem; font-weight: bold; color: #1e40af; }
-        .section-name { font-size: 1.3rem; font-weight: bold; color: #334155; }
-        
-        /* 補回：詞語顏色定義 */
-        .p1 { color: #000; font-weight: bold; } 
-        .p2 { color: #f00; font-weight: bold; } 
-        .p3 { color: #00f; font-weight: bold; }
-
-        .inline-word-list { font-size: 1.5rem; line-height: 2.3; color: #475569; font-weight: bold; }
-        .word-item { cursor: pointer; display: inline-block; padding: 0 8px; border-radius: 5px; }
-        .word-item .meaning { font-size: 0.95rem; color: #94a3b8; margin-left: 3px; font-weight: normal; }
-        .highlight { background-color: #fef9c3 !important; color: var(--accent) !important; }
-
-        .word-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; }
-        .word-card { flex: 1 1 calc(33.33% - 10px); min-width: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 18px; cursor: pointer; text-align: center; padding: 15px 5px; border: 1px solid rgba(0,0,0,0.05); font-weight: bold; } 
-        .card-q { font-size: 1.8rem; margin-bottom: 5px; }
-        .card-a { font-size: 1rem; color: #475569; font-weight: normal; }
-
-        .back-btn { position: absolute; left: 10px; top: 25px; background: none; border: none; font-size: 2.5rem; color: var(--primary); cursor: pointer; z-index: 101; }
-        .play-all-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; }
-        
-        .c1 { background-color: #ffe4e6; } .c2 { background-color: #dcfce7; } .c3 { background-color: #fef9c3; } .c4 { background-color: #f3e8ff; } 
-        .c5 { background-color: #ffedd5; } .c6 { background-color: #dbeafe; } .c7 { background-color: #fae8ff; } .c8 { background-color: #f0fdfa; }
+        .inline-word-list { font-size: 1.5rem !important; line-height: 2.3 !important; font-weight: bold !important; }
+        .word-item { cursor: pointer; display: inline-block; padding: 0 10px; color: #1e293b; font-weight: bold !important; border-radius: 8px; }
+        .word-mean { color: #444; font-size: 1.1rem; font-weight: normal; margin-left: 4px; vertical-align: middle; }
+        .highlight-text { background: #ebf2ff; box-shadow: 0 0 0 2px #1fb338; }
+        .section-grid-double { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
+        .btn-card-img { width: 100%; height: auto; display: block; border-radius: 15px; cursor: pointer; border: 1px solid #f1f5f9; }
+        .word-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; justify-content: space-between; }
+        .word-card { flex: 1 1 calc(50% - 8px); min-width: 150px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 15px; cursor: pointer; padding: 8px 5px; background-color: #ffffff; border: 1px solid #e2e8f0; text-align: center; min-height: 90px; } 
+        .card-q { font-size: 1.8rem; font-weight: bold; width: 100%; text-align: center; line-height: 1.2; }
+        .card-a { font-size: 1.1rem; color: #64748b; margin-top: 2px; width: 100%; font-weight: bold; text-align: center; }
+        .highlight-card { border: 2px solid #3b82f6 !important; background: #ebf2ff !important; transform: scale(1.02); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: white; border-radius: 20px; padding: 25px; width: 420px; max-height: 85vh; overflow-y: auto; text-align: left; }
     </style>
 </head>
 <body>
+
 <div class="app-container">
     <div id="home-view">
-        <div class="header">
-            <h1 onclick="adminTrigger()">Simple Phonics</h1>
-            <button class="intro-btn" onclick="toggleModal(true)">📖 課程簡介 & 步驟</button>
-        </div>
+        <div class="main-logo-container" onclick="window.toggleModal(true)"><img src="images/title_logo.png" class="main-logo"></div>
         <div id="main-menu" class="menu-grid"></div>
     </div>
-
+    
     <div id="special-view" class="hidden">
         <div class="header">
-            <button class="back-btn" onclick="showView('home-view')">⬅</button>
-            <h2 id="special-title" style="display:inline-block;"></h2>
-            <button id="special-play-all-btn" class="play-all-btn" style="margin-left:10px; vertical-align:middle;">▶ 播放全部</button>
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"></div>
+            <div class="heading-area"><div id="special-heading-text" class="heading-text"></div></div>
+            <div class="play-area"><img id="special-play-all-img" src="images/play_all.png" class="img-btn"></div>
         </div>
         <div id="special-content"></div>
     </div>
 
     <div id="section-view" class="hidden">
         <div class="header">
-            <button class="back-btn" onclick="showView('home-view')">⬅</button>
-            <h2 id="chapter-title"></h2>
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"></div>
+            <div class="heading-area"><div id="chapter-heading-text" class="heading-text"></div></div>
+            <div class="play-area"></div>
         </div>
-        <div id="section-list" class="menu-grid"></div>
+        <div id="section-list" class="section-grid-double"></div>
     </div>
 
     <div id="word-view" class="hidden">
         <div class="header">
-            <button class="back-btn" onclick="showView('section-view')">⬅</button>
-            <h2 id="section-title" style="display:inline-block;"></h2>
-            <button id="section-play-btn" class="play-all-btn" style="margin-left:10px; vertical-align:middle;">▶ 播放全部</button>
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('section-view')"></div>
+            <div class="heading-area"><div id="section-heading-text" class="heading-text"></div></div>
+            <div class="play-area"><img id="word-play-all-img" src="images/play_all.png" class="img-btn"></div>
         </div>
         <div id="word-list" class="word-container"></div>
     </div>
@@ -93,109 +77,191 @@
 
 <div id="intro-modal" class="modal-overlay hidden">
     <div class="modal-box">
-        <h3>簡介</h3>
-        <p>學習拼音（Phonics），能夠認識字母及其發音（sounds）的關係，從而提昇英語發音、拼讀和串字能力，而不需要只靠死記硬背生字的串法和讀音。</p>
-        <p>然而，拼音絕對不是萬能的，英文中約只有70%的生字是能用拼音規則（Phonics rules）去拼讀出來，故此即使學懂了也不能完全認讀所有英文生字；有約30%的英文生字，仍是要靠記憶去認讀的。</p>
-        
-        <h3>學習步驟</h3>
-        <p>
-            1. 學習A至Z的Phonics sounds。<br>
-            2. 拼讀CVC（consonant vowel consonant），即包含三個字母的單字（例：cat, dog, pig）。<br>
-            3. 學習Digraphs，即由兩個字母組成的音（如sh, th, ch等）。拼讀更多以不同音素組成的單字（如chip, short, chain等）。
-        </p>
-        <button class="modal-close-btn" onclick="toggleModal(false)">關閉</button>
+        <h3 id="intro-title" style="cursor: pointer; text-align: center; color: var(--primary);">簡介</h3>
+<p>透過音節拆解法，建立「見字能讀、聽音能拼」的自信。</p>
+<p><strong>拼讀基礎：</strong>掌握 CVC 及 Digraphs 拼讀規律。</p>
+<p><strong>主題詞彙：</strong>涵蓋八大生活情境，學以致用。</p>
+<p><strong>音節拆解：</strong>視覺化呈現發音結構，告別死記硬背。</p>
+        <button style="width:100%; margin-top:10px; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="window.toggleModal(false)">開始學習</button>
+        <button id="sync-btn" style="width:100%; margin-top:15px; padding:12px; background:#1e293b; color:white; border:none; border-radius:10px; font-weight:bold;" class="hidden" onclick="window.syncToFirebase()">同步數據到 Firebase</button>
     </div>
-</div>
-
-<div id="admin-panel" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:15px;border-radius:12px;z-index:3000;" class="hidden">
-    <button style="color:white;background:#3b82f6;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;font-weight:bold;" onclick="syncToFirebase()">同步資料到雲端</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", authDomain: "phonics-b096f.firebaseapp.com", projectId: "phonics-b096f", storageBucket: "phonics-b096f.firebasestorage.app", messagingSenderId: "315671176929", appId: "1:315671176929:web:9c525f86c381b6b0c179a0" };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", 
+        authDomain: "phonics-b096f.firebaseapp.com", 
+        projectId: "phonics-b096f", 
+        storageBucket: "phonics-b096f.firebasestorage.app", 
+        messagingSenderId: "315671176929", 
+        appId: "1:315671176929:web:9c525f86c381b6b0c179a0" 
+    };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const sortOrder = ['cvc', 'digraphs', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
-    let gameData = {}; let currentChKey = ""; let currentAbortController = null; const colors = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'];
+    const chapterNames = {
+        ch_a: "Short Vowels (CVC)", ch_b: "Digraphs & Blends", ch_c: "Vowel Digraphs & Long Vowels", ch_d: "Silent Letters & Special Sound",
+        ch1: "1 認識自己 About Me", ch2: "2 家居空間Home Space", ch3: "3 美食天地 Food World", ch4: "4 日常生活 Daily Life",
+        ch5: "5 城鄉見聞 Town & Country", ch6: "6 樂在其中 Have Fun", ch7: "7 好好學習 Let's Learn", ch8: "8 綠色地球 Green Earth"
+    };
 
-    async function loadData() {
-        try {
-            const docSnap = await getDoc(doc(db, "gameConfig", "content"));
-            gameData = docSnap.exists() ? docSnap.data() : {};
-            renderHome();
-        } catch (e) { console.error(e); }
-    }
+    let gameData = {};
 
-    window.toggleModal = (show) => { document.getElementById('intro-modal').classList.toggle('hidden', !show); }
-    window.syncToFirebase = async function() { try { await setDoc(doc(db, "gameConfig", "content"), gameData); alert("✅ 同步成功！"); } catch (e) { alert("❌ 同步失敗"); } }
-    window.showView = (id) => { if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; } document.querySelectorAll('.app-container > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
-    
-    function renderHome() { 
-        const menu = document.getElementById('main-menu');
-        menu.innerHTML = sortOrder.filter(key => gameData[key]).map(key => `
-            <div class="menu-card ${(key === 'cvc' || key === 'digraphs') ? 'special' : ''}" onclick="route('${key}')">
-                <div class="icon">${gameData[key].icon || "📖"}</div>
-                <div class="title">${gameData[key].title}</div>
-            </div>`).join('');
-    }
+    let currentChKey = ""; 
+    let currentAbortController = null; 
+    let clickCount = 0;
 
-    window.route = (key) => { currentChKey = key; if (key === 'cvc' || key === 'digraphs') { renderSpecial(key); } else { renderChapter(key); } }
+    // --- 關鍵：將函式掛載到 window ---
+    window.toggleModal = (show) => { document.getElementById('intro-modal').classList.toggle('hidden', !show); };
+    window.showView = (id) => { 
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; } 
+        document.querySelectorAll('.app-container > div').forEach(d => { if(!d.classList.contains('modal-overlay')) d.classList.add('hidden'); });
+        document.getElementById(id).classList.remove('hidden'); 
+    };
 
-    function renderSpecial(key) {
-        const item = gameData[key]; document.getElementById('special-title').innerHTML = item.title;
-        let allWords = [];
-        let html = (item.sections || []).map((sec, sIdx) => {
-            let wordsHtml = sec.words.map((w, wIdx) => {
-                const globalIdx = allWords.length; allWords.push(w);
-                return `<span class="word-item" id="sp-item-${globalIdx}" onclick="speak('${w.q}')">${w.p || w.q}<span class="meaning">${w.a}</span></span>`;
-            }).join(' ');
-            return `<div class="section-box"><div class="section-title-row"><span class="section-name">${sec.name}</span></div><div class="inline-word-list">${wordsHtml}</div></div>`;
+    window.route = (k) => { 
+        currentChKey = k;
+        if (k === 'ch_a' || k === 'ch_b'|| k === 'ch_c'|| k === 'ch_d') window.renderSpecial(k);
+        else window.renderChapterList(k);
+    };
+
+    window.renderSpecial = (k) => {
+    const item = gameData[k] || { sections: [] };
+    let wordsAll = [];
+    let globalIdx = 0;
+    document.getElementById('special-heading-text').innerText = chapterNames[k];
+    const contentHtml = (item.sections || []).map(sec => {
+        const startIdx = globalIdx;
+        let ws = (sec.words || []).map(w => {
+            const idx = globalIdx++;
+            wordsAll.push(w);
+            // 修改這裡：加入 ${p.u ? 'u' : ''}
+            let displayText = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : (w.p || w.q);
+            return `<span class="word-item" id="sp-${idx}" onclick="window.speak('${w.q}')">${displayText}<span class="word-mean">${w.a}</span></span>`;
+        }).join(' ');
+        return `<div class="section-box"><span style="color:#ad4f26; font-size:1.3rem; font-weight:bold; cursor:pointer;" onclick="window.playSection(${startIdx}, ${globalIdx})">${sec.name}</span><div class="inline-word-list">${ws}</div></div>`;
+    }).join('');
+    document.getElementById('special-content').innerHTML = contentHtml;
+    document.getElementById('special-play-all-img').onclick = function() { window.playAll(this, wordsAll, 'sp', 'highlight-text'); };
+    window.showView('special-view');
+};
+
+    window.renderChapterList = (k) => {
+        const item = gameData[k] || {sections:{}};
+        document.getElementById('chapter-heading-text').innerText = chapterNames[k];
+        const listHtml = Object.keys(item.sections || {}).sort().map(sk => {
+            let skImg = 's' + sk.replace(/[^0-9]/g, '').padStart(2, '0');
+            return `<div onclick="window.openSection('${sk}')"><img src="images/${k}_${skImg}.png" class="btn-card-img" onerror="this.src='images/placeholder.png'"></div>`;
         }).join('');
-        const playBtn = document.getElementById('special-play-all-btn');
-        playBtn.onclick = () => playAllWords(playBtn, allWords, 'sp-item');
-        playBtn.innerHTML = "▶ 播放全部";
-        document.getElementById('special-content').innerHTML = html;
-        showView('special-view');
-    }
+        document.getElementById('section-list').innerHTML = listHtml;
+        window.showView('section-view');
+    };
 
-    function renderChapter(key) {
-        document.getElementById('chapter-title').innerHTML = gameData[key].title;
-        const sections = gameData[key].sections || {};
-        const sortedKeys = Object.keys(sections).sort((a,b) => a.localeCompare(b, undefined, {numeric: true}));
-        document.getElementById('section-list').innerHTML = sortedKeys.map(k => `<div class="menu-card" onclick="openSection('${k}')"><div class="title">${sections[k].name || "Section"}</div></div>`).join('');
-        showView('section-view');
-    }
+ window.openSection = (sk) => {
+    const sec = gameData[currentChKey].sections[sk];
+    if (!sec) return; // 安全檢查
+    document.getElementById('section-heading-text').innerText = sec.name;
+    document.getElementById('word-list').innerHTML = (sec.words || []).map((w, i) => {
+        // 修改這裡：將 p.s 改為 p.u
+        let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : w.q;
+        return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="card-q">${h}</div><div class="card-a">${w.a}</div></div>`;
+    }).join('');
+    document.getElementById('word-play-all-img').onclick = function() { window.playAll(this, sec.words, 'card', 'highlight-card'); };
+    window.showView('word-view');
+};
 
-    window.openSection = (secKey) => {
-        const item = gameData[currentChKey]; const sec = item.sections[secKey];
-        document.getElementById('section-title').innerHTML = sec.name;
-        const btn = document.getElementById('section-play-btn');
-        btn.onclick = () => playAllWords(btn, sec.words, 'card');
-        btn.innerHTML = "▶ 播放全部";
-        document.getElementById('word-list').innerHTML = sec.words.map((w, i) => `<div id="card-${i}" class="word-card ${colors[i % 8]}" onclick="speak('${w.q}')"><div class="card-q">${w.p || w.q}</div><div class="card-a">${w.a}</div></div>`).join('');
-        showView('word-view');
-    }
+    // 優化後的語音函式
+    window.speak = (t) => {
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(t);
+        m.lang = 'en-US';
+        m.rate = 0.85;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v => (v.name.includes('Google') && v.name.includes('Female')) || v.name.includes('Samantha') || v.name.includes('Zira'));
+        
+        if (femaleVoice) m.voice = femaleVoice;
+        window.speechSynthesis.speak(m);
+    };
 
-    window.playAllWords = async function(btn, words, idPrefix) {
-        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.innerHTML = "▶ 播放全部"; return; }
-        const controller = { abort: false }; currentAbortController = controller; btn.innerHTML = "⏹ 停止";
+    window.playAll = async (btn, words, prefix, highlightClass) => {
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.src = "images/play_all.png"; return; }
+        const ctrl = { abort: false }; currentAbortController = ctrl; btn.src = "images/stop_btn.png"; 
         for (let i = 0; i < words.length; i++) {
-            if (controller.abort) break;
-            const elId = `${idPrefix}-${i}`; const el = document.getElementById(elId);
-            if (el) el.classList.add('highlight'); speak(words[i].q);
+            if (ctrl.abort) break;
+            const el = document.getElementById(`${prefix}-${i}`);
+            if (el) el.classList.add(highlightClass); window.speak(words[i].q);
             await new Promise(r => setTimeout(r, 1600));
-            if (el) el.classList.remove('highlight');
+            if (el) el.classList.remove(highlightClass);
         }
-        btn.innerHTML = "▶ 播放全部"; currentAbortController = null;
+        btn.src = "images/play_all.png"; currentAbortController = null;
+    };
+
+    window.playSection = async (start, end) => {
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; }
+        const ctrl = { abort: false }; currentAbortController = ctrl;
+        for (let i = start; i < end; i++) {
+            if (ctrl.abort) break;
+            const el = document.getElementById(`sp-${i}`);
+            if (el) el.classList.add('highlight-text');
+            window.speak(el.innerText.split('\n')[0]);
+            await new Promise(r => setTimeout(r, 1600));
+            if (el) el.classList.remove('highlight-text');
+        }
+        currentAbortController = null;
+    };
+
+    window.syncToFirebase = async () => {
+        try { await setDoc(doc(db, "gameConfig", "content"), gameData); alert("✅ 同步成功！"); } 
+        catch (e) { alert("❌ 同步失敗: " + e.message); }
+    };
+
+    document.getElementById('intro-title').onclick = () => {
+        clickCount++; if(clickCount >= 5) document.getElementById('sync-btn').classList.remove('hidden');
+    };
+
+async function loadData() {
+    const docRef = doc(db, "gameConfig", "content");
+    try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            // 關鍵修改：將 Firebase 的完整數據賦值給 gameData
+            const cloudData = docSnap.data();
+            gameData = cloudData;
+            
+            // 數據加載完成後，才進行首次渲染，防止白畫面
+            renderHome();
+            console.log("數據同步成功");
+        } else {
+            console.error("Firebase 中找不到數據！");
+            // 如果雲端沒數據，至少渲染主頁防止白畫面
+            renderHome(); 
+        }
+    } catch (e) {
+        console.error("加載失敗:", e);
+        renderHome();
+    }
+}
+
+    function renderHome() {
+        const menu = document.getElementById('main-menu');
+        menu.innerHTML = Object.keys(chapterNames).map(k => {
+            const cls = (k === 'ch_a' || k === 'ch_b' || k === 'ch_c' || k === 'ch_d') ? 'small-icon' : 'chapter-icon';
+            return `<div class="menu-card ${cls}" onclick="window.route('${k}')"><img src="images/${k}.png" onerror="this.src='images/placeholder.png'"></div>`;
+        }).join('');
     }
 
-    window.speak = (t) => { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'en-US'; m.rate = 0.9; window.speechSynthesis.speak(m); }
-    let clicks = 0; window.adminTrigger = () => { clicks++; if(clicks>=5) document.getElementById('admin-panel').classList.remove('hidden'); }
+    // 新增：強制預載入語音，解決第一次發音問題
+    window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+    };
+    window.speechSynthesis.getVoices();
+
     loadData();
 </script>
+
 </body>
 </html>
