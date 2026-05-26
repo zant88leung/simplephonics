@@ -19,7 +19,6 @@
         .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 15px; }
         .menu-card { border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; overflow: hidden; text-align: center; }
         .menu-card img { width: 100%; display: block; }
-        .mysterious { filter: brightness(0) contrast(0); }
         .word-translation { font-size: 2rem; color: #666; margin-top: 20px; font-weight: bold; }
         .word-display-box { height: 100px; display: flex; justify-content: center; align-items: baseline; margin: 20px 20px 0 20px; }
         .word-text { font-size: 3rem; font-weight: bold; display: flex; align-items: baseline; }
@@ -33,16 +32,15 @@
         <div class="main-logo-container" onclick="window.location.reload()"><img src="images/title_logo_2.png" style="width:100%"></div>
         <div class="top-bar" onclick="window.showCollection()"><span>⭐ 我的收藏</span><span class="coin-display">金幣: 100</span></div>
         <div id="main-menu" class="menu-grid">
-            <script>for(let i=1;i<=8;i++) document.write(`<div class="menu-card" onclick="window.route('ch${i}')"><img src="images/ch${i}.png"></div>`);</script>
+            <div class="menu-card" onclick="window.route('ch1')"><img src="images/ch1.png"></div>
+            <div class="menu-card" onclick="window.route('ch2')"><img src="images/ch2.png"></div>
+            <div class="menu-card" onclick="window.route('ch3')"><img src="images/ch3.png"></div>
+            <div class="menu-card" onclick="window.route('ch4')"><img src="images/ch4.png"></div>
+            <div class="menu-card" onclick="window.route('ch5')"><img src="images/ch5.png"></div>
+            <div class="menu-card" onclick="window.route('ch6')"><img src="images/ch6.png"></div>
+            <div class="menu-card" onclick="window.route('ch7')"><img src="images/ch7.png"></div>
+            <div class="menu-card" onclick="window.route('ch8')"><img src="images/ch8.png"></div>
         </div>
-    </div>
-    <div id="collection-view" class="hidden">
-        <div class="header"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"><div class="page-title">我的收藏</div><div onclick="window.renderShop()" style="cursor:pointer; color:var(--primary);">禮品商店</div></div>
-        <div id="collection-list" class="shop-grid"></div>
-    </div>
-    <div id="shop-view" class="hidden">
-        <div class="header"><img src="images/back_btn.png" class="img-btn" onclick="window.showCollection()"><div class="shop-title">🛒 禮品商店</div><div class="coin-display">金幣: 100</div></div>
-        <div id="shop-items" class="shop-grid"></div>
     </div>
     <div id="section-view" class="hidden">
         <div class="header"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"><div id="chapter-heading-text" class="page-title"></div><div class="coin-display">金幣: 100</div></div>
@@ -60,44 +58,30 @@
     
     const db = getFirestore(initializeApp({ projectId: "phonics-b096f" }));
     const chapterNames = { ch1: "1 認識自己", ch2: "2 家居空間", ch3: "3 美食天地", ch4: "4 日常生活", ch5: "5 城鄉見聞", ch6: "6 樂在其中", ch7: "7 好好學習", ch8: "8 綠色地球" };
-    const shopItems = Array.from({length: 10}, (_, i) => ({ id: i + 1, price: (i + 1) * 50, img: `gift_${String(i + 1).padStart(3, '0')}.png` }));
     
-    let gameData = null, currentChKey = "", coins = 100, collectedItems = [];
-
+    window.gameData = null; // 全域變數
+    window.coins = 100;
+    
     window.showView = (id) => { document.querySelectorAll('.app-container > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); };
-    window.updateUI = () => document.querySelectorAll('.coin-display').forEach(el => el.innerText = "金幣: " + coins);
-    
-    // 強力 route 函數：確保資料讀取與路徑切換
-    window.route = async (k) => {
-        try {
-            currentChKey = k;
-            document.getElementById('chapter-heading-text').innerText = chapterNames[k];
-            
-            if (!gameData) {
-                const docRef = doc(db, "gameConfig", "content");
-                const snap = await getDoc(docRef);
-                if (snap.exists()) {
-                    gameData = snap.data();
-                } else {
-                    alert("找不到遊戲數據！");
-                    return;
-                }
-            }
+    window.updateUI = () => document.querySelectorAll('.coin-display').forEach(el => el.innerText = "金幣: " + window.coins);
 
-            const sections = gameData[k].sections;
+    window.route = async (k) => {
+        document.getElementById('chapter-heading-text').innerText = chapterNames[k];
+        try {
+            if (!window.gameData) {
+                const snap = await getDoc(doc(db, "gameConfig", "content"));
+                window.gameData = snap.data();
+            }
+            const sections = window.gameData[k].sections;
             document.getElementById('section-list').innerHTML = Object.keys(sections).sort().map(sk => 
-                `<div onclick="window.openSection('${sk}')"><img src="images/${k}_s${sk.replace(/\D/g,'').padStart(2,'0')}.png" style="width:100%; border-radius:15px;"></div>`
+                `<div onclick="window.openSection('${sk}', '${k}')"><img src="images/${k}_s${sk.replace(/\D/g,'').padStart(2,'0')}.png" style="width:100%; border-radius:15px;"></div>`
             ).join('');
-            
             window.showView('section-view');
-        } catch (e) {
-            console.error(e);
-            alert("連接伺服器失敗，請檢查網路。");
-        }
+        } catch (e) { alert("讀取數據失敗，請檢查網路。"); }
     };
 
-    window.openSection = (sk) => {
-        const sec = gameData[currentChKey].sections[sk];
+    window.openSection = (sk, k) => {
+        const sec = window.gameData[k].sections[sk];
         const words = (sec.words || []).slice(0, 5);
         let idx = 0;
         document.getElementById('section-heading-text').innerText = sec.name;
@@ -105,45 +89,25 @@
         
         const render = () => {
             const w = words[idx];
-            document.getElementById('word-list').innerHTML = `
-                <div class="word-translation">${w.a}</div>
-                <div class="word-display-box"><div class="word-text">${w.parts.map(p => `<span class="c-${p.ty || 1}">${p.t}</span>`).join('')}</div></div>
-                <button id="rec-btn" class="rec-btn">按下開始錄音</button>
-                <button id="submit-btn" class="submit-btn hidden">提交評分</button>
-                <div id="result-msg" style="margin-top:20px; font-weight:bold;"></div>
-            `;
-            
-            let chunks = [], recorder;
-            const btn = document.getElementById('rec-btn');
-            const sub = document.getElementById('submit-btn');
-
+            document.getElementById('word-list').innerHTML = `<div class="word-translation">${w.a}</div><div class="word-display-box"><div class="word-text">${w.parts.map(p => `<span class="c-${p.ty || 1}">${p.t}</span>`).join('')}</div></div><button id="rec-btn" class="rec-btn">按下開始錄音</button><button id="submit-btn" class="submit-btn hidden">提交評分</button><div id="result-msg" style="margin-top:20px; font-weight:bold;"></div>`;
+            const btn = document.getElementById('rec-btn'), sub = document.getElementById('submit-btn');
             btn.onclick = async () => {
-                if (btn.innerText === "按下開始錄音") {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    recorder = new MediaRecorder(stream);
-                    recorder.ondataavailable = e => chunks.push(e.data);
-                    recorder.start();
-                    btn.innerText = "錄音中...按此停止";
-                } else {
-                    recorder.stop();
-                    btn.classList.add('hidden');
-                    sub.classList.remove('hidden');
-                }
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(stream);
+                recorder.start();
+                btn.innerText = "錄音中...按此停止";
+                btn.onclick = () => { recorder.stop(); stream.getTracks().forEach(t => t.stop()); btn.classList.add('hidden'); sub.classList.remove('hidden'); };
             };
-
             sub.onclick = () => {
                 const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                rec.lang = 'en-US';
-                rec.start();
-                sub.innerText = "分析中...";
+                rec.lang = 'en-US'; rec.start(); sub.innerText = "分析中...";
                 rec.onresult = (e) => {
-                    const spoken = e.results[0][0].transcript.toLowerCase();
-                    if(spoken.includes(w.text.toLowerCase())) {
+                    if(e.results[0][0].transcript.toLowerCase().includes(w.text.toLowerCase())) {
                         document.getElementById('result-msg').innerHTML = "<span style='color:green;'>優秀！ (+50 金幣)</span>";
-                        coins += 50;
+                        window.coins += 50;
                     } else {
                         document.getElementById('result-msg').innerHTML = "<span style='color:orange;'>再接再厲！ (+10 金幣)</span>";
-                        coins += 10;
+                        window.coins += 10;
                     }
                     window.updateUI();
                     setTimeout(() => { idx++; if(idx < words.length) render(); else alert("挑戰完成！"); }, 2000);
@@ -152,10 +116,6 @@
         };
         render();
     };
-
-    window.renderShop = () => { /* ...同樣邏輯... */ };
-    window.buyItem = (id) => { /* ...同樣邏輯... */ };
-    window.showCollection = () => { /* ...同樣邏輯... */ };
 </script>
 </body>
 </html>
