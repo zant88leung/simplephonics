@@ -3,294 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>英語煉金術 V21.8</title>
+    <title>Simple Phonics V16.0</title>
     <style>
-        :root { --bg: #0f172a; --gold: #f59e0b; --text: #f8fafc; --accent: #6366f1; }
-        body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; }
-        .app { width: 100%; max-width: 500px; min-height: 100vh; background: #1e293b; position: relative; display: flex; flex-direction: column; }
+        :root { --primary: #651caa; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
+        body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
+        .header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 100; min-height: 65px; }
+        .back-area { width: 80px; display: flex; justify-content: flex-start; }
+        .img-btn { height: 40px !important; width: auto !important; cursor: pointer; object-fit: contain; }
+        .heading-area { flex: 1; display: flex; justify-content: center; align-items: center; text-align: center; }
+        .heading-text { font-size: 1.3rem; font-weight: bold; color: #4b0082; line-height: 1.2; }
         
-        /* 置頂 Logo */
-        .logo-wrap { width: 100%; background: white; line-height: 0; }
-        .logo-img { width: 100%; height: auto; display: block; }
-
-        /* 頂部資訊列 */
-        .header-bar { background: #0f172a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
-        .nav-btn { background: var(--accent); color: white; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-        .coin-display { font-weight: bold; color: var(--gold); font-size: 1.2rem; display: flex; align-items: center; gap: 5px; }
-
-        /* 標題列 */
-        .page-title-bar { padding: 15px; display: flex; align-items: center; background: rgba(0,0,0,0.2); border-bottom: 1px solid #334155; }
-        .back-btn { color: white; background: none; border: 1px solid #555; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
-
-        /* 網格佈局 */
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
-        .grid-item img { width: 100%; border-radius: 12px; display: block; cursor: pointer; }
-
-        /* 收藏/商店 網格 */
-        .item-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 15px; }
-        .slot { aspect-ratio: 1; background: #0f172a; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--gold); }
-        .slot img { width: 85%; height: auto; }
+        /* 通用金幣樣式 */
+        .coin-box { font-weight: bold; color: var(--primary); font-size: 1rem; }
         
-        .empty-msg { text-align: center; color: #94a3b8; padding: 60px 20px; font-size: 1.4rem; font-weight: bold; letter-spacing: 1px; }
-
-        /* 商店樣式 */
-        .shop-slot { aspect-ratio: 1; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .shop-slot:hover { border-color: var(--gold); }
-        .price-tag { font-size: 0.65rem; color: var(--gold); margin-top: 4px; font-weight: bold; }
-
-        .action-area { padding: 20px; margin-top: auto; }
-        .main-action-btn { width: 100%; padding: 16px; background: var(--gold); color: #431407; border: none; border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 0 #b45309; }
-
-        /* 遊戲區域 */
-        .game-main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; }
-        .word-card { background: white; color: #1e293b; border-radius: 25px; padding: 45px 20px; width: 85%; text-align: center; border: 6px solid #cbd5e1; position: relative; }
-        .result-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1000; pointer-events: none; opacity: 0; visibility: hidden; background: rgba(255,255,255,0.3); border-radius: 20px; }
-        .result-overlay img { width: 75%; height: auto; transform: scale(0.5); transition: 0.3s; }
-        .show-res { opacity: 1; visibility: visible; }
-        .show-res img { transform: scale(1.1); }
-        .exit-btn { width: 70%; padding: 15px; background: #ef4444; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 1.3rem; cursor: pointer; margin-top: 30px; }
-
-        /* 拆音顏色 */
-        .c-1 { color: #000!important; } .c-2 { color: #007bff!important; } .c-3 { color: #ff8800!important; }
-        .c-4 { color: #28a745!important; } .c-5 { color: #9333ea!important; }
-        .u { text-decoration: underline!important; text-underline-offset: 4px; text-decoration-thickness: 3px; }
+        .main-logo-container { width: 100%; padding: 0; line-height: 0; cursor: pointer; }
+        .main-logo { width: 100%; height: auto; display: block; }
+        .top-bar { display: flex; justify-content: space-between; padding: 10px 20px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
+        .menu-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; overflow: hidden; }
+        .menu-card img { width: 100%; height: auto; display: block; }
+        .section-grid-double { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
+        .btn-card-img { width: 100%; height: auto; display: block; border-radius: 15px; cursor: pointer; border: 1px solid #f1f5f9; }
+        
+        .rec-box { padding: 50px 20px; text-align: center; }
+        .rec-btn { padding: 20px 40px; font-size: 1.2rem; background: var(--primary); color: white; border: none; border-radius: 50px; cursor: pointer; }
+        .c-1 { color: #000; } .c-2 { color: #007bff; } .c-3 { color: #ff8800; } .c-4 { color: #28a745; } .c-5 { color: #9333ea; }
     </style>
 </head>
 <body>
 
-<div class="app">
-    <div id="v-home" class="view">
-        <div class="logo-wrap"><img src="images/title_logo.png" class="logo-img"></div>
-        <div class="header-bar">
-            <button class="nav-btn" onclick="enterCollection()">📦 我的收藏</button>
-            <div class="coin-display">💰 <span id="home-coins">0</span></div>
+<div class="app-container">
+    <div id="home-view">
+        <div class="main-logo-container" onclick="window.location.reload()"><img src="images/title_logo_2.png" class="main-logo"></div>
+        <div class="top-bar">
+            <span>⭐ 我的收藏</span>
+            <span class="coin-display">金幣: 100</span>
         </div>
-        <div id="chapter-menu" class="grid-layout"></div>
+        <div id="main-menu" class="menu-grid"></div>
+    </div>
+    
+    <div id="section-view" class="hidden">
+        <div class="header">
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"></div>
+            <div class="heading-area"><div id="chapter-heading-text" class="heading-text"></div></div>
+            <div class="coin-box">金幣: 100</div>
+        </div>
+        <div id="section-list" class="section-grid-double"></div>
     </div>
 
-    <div id="v-collection" class="view hidden">
-        <div class="page-title-bar">
-            <button class="back-btn" onclick="goto('v-home')">返回</button>
-            <b style="margin-left:15px; color:var(--gold);">我的收藏 COLLECTION</b>
+    <div id="word-view" class="hidden">
+        <div class="header">
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('section-view')"></div>
+            <div class="heading-area"><div id="section-heading-text" class="heading-text"></div></div>
+            <div class="coin-box">金幣: 100</div>
         </div>
-        <div id="coll-content"></div>
-        <div class="action-area">
-            <button class="main-action-btn" onclick="enterShop()">🏪 前往寶物商店換取</button>
-        </div>
-    </div>
-
-    <div id="v-shop" class="view hidden">
-        <div class="page-title-bar">
-            <button class="back-btn" onclick="enterCollection()">返回收藏</button>
-            <b style="margin-left:15px; color:var(--gold);">寶物商店 SHOP</b>
-        </div>
-        <div class="header-bar">
-            <span style="color:#94a3b8; font-size:0.9rem;">每件 100 💰</span>
-            <div class="coin-display">💰 <span id="shop-coins">0</span></div>
-        </div>
-        <div id="shop-grid" class="item-grid"></div>
-    </div>
-
-    <div id="v-levels" class="view hidden">
-        <div class="page-title-bar">
-            <button class="back-btn" onclick="goto('v-home')">返回</button>
-            <b id="cap-label" style="margin-left:15px; color:var(--gold);"></b>
-        </div>
-        <div id="subhead-container" class="grid-layout"></div>
-    </div>
-
-    <div id="v-game" class="view hidden" style="flex:1; display:flex; flex-direction:column;">
-        <div class="header-bar">
-            <div id="prog-display" style="color:white; font-weight:bold; background:rgba(255,255,255,0.1); padding:4px 12px; border-radius:10px;">0/0</div>
-            <div class="coin-display">💰 <span id="game-coins">0</span></div>
-        </div>
-        <div class="game-main">
-            <div id="game-card" class="word-card">
-                <div id="res-layer" class="result-overlay"><img id="res-img" src=""></div>
-                <div id="word-q" style="font-size:3.5rem; font-weight:bold;"></div>
-                <div id="word-a" style="color:#666; font-size:1.5rem; margin-top:10px;"></div>
-            </div>
-            <p id="game-hint" style="font-weight:bold; color:var(--gold); font-size:1.5rem; margin:15px 0; min-height:1.6rem;"></p>
-            <button class="exit-btn" onclick="exitGame()">退出 EXIT</button>
-        </div>
+        <div id="word-list"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    const db = getFirestore(initializeApp({ projectId: "phonics-b096f" }));
+    
+    const chapterNames = { ch1: "1 認識自己", ch2: "2 家居空間", ch3: "3 美食天地", ch4: "4 日常生活", ch5: "5 城鄉見聞", ch6: "6 樂在其中", ch7: "7 好好學習", ch8: "8 綠色地球" };
+    let gameData = {}, currentChKey = "", coins = 100;
 
-    const db = getFirestore(initializeApp({ 
-        apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", 
-        authDomain: "phonics-b096f.firebaseapp.com", 
-        projectId: "phonics-b096f", 
-        appId: "1:315671176929:web:9c525f86c381b6b0c179a0" 
-    }));
+    window.showView = (id) => { document.querySelectorAll('.app-container > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); };
+    window.route = (k) => { currentChKey = k; renderChapterList(k); };
 
-    let gameData = {}, coins = 0, isStop = false, curWords = [], curIdx = 0;
-    let ownedItems = []; // 初始空收藏
-
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRec ? new SpeechRec() : null;
-    if(recognition) { recognition.lang = 'en-US'; recognition.interimResults = false; }
-
-    window.goto = (id) => {
-        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    };
-
-    /* 1. 收藏邏輯：無寶物時顯示文字 */
-    window.enterCollection = () => {
-        const container = document.getElementById('coll-content');
-        if (ownedItems.length === 0) {
-            container.innerHTML = `<div class="empty-msg">未擁有寶物</div>`;
-        } else {
-            let html = `<div class="item-grid">`;
-            ownedItems.sort((a,b)=>a-b).forEach(id => {
-                html += `<div class="slot"><img src="images/sword_${id}.png"></div>`;
-            });
-            html += `</div>`;
-            container.innerHTML = html;
-        }
-        goto('v-collection');
-    };
-
-    /* 2. 商店邏輯：購買後扣錢並更新 */
-    window.enterShop = () => {
-        const grid = document.getElementById('shop-grid');
-        grid.innerHTML = Array.from({length: 16}, (_, i) => i + 1).map(id => {
-            const isOwned = ownedItems.includes(id);
-            return `
-                <div class="shop-slot" onclick="buyItem(${id})">
-                    ${isOwned ? `<img src="images/sword_${id}.png" style="opacity:0.3">` : `<span style="font-size:1.5rem;">🔒</span><span class="price-tag">100💰</span>`}
-                </div>
-            `;
+    function renderChapterList(k) {
+        document.getElementById('chapter-heading-text').innerText = chapterNames[k];
+        document.getElementById('section-list').innerHTML = Object.keys(gameData[k].sections).sort().map(sk => {
+            let skImg = 's' + sk.replace(/[^0-9]/g, '').padStart(2, '0');
+            return `<div onclick="window.openSection('${sk}')"><img src="images/${k}_${skImg}.png" class="btn-card-img"></div>`;
         }).join('');
-        document.getElementById('shop-coins').innerText = coins;
-        goto('v-shop');
-    };
+        window.showView('section-view');
+    }
 
-    window.buyItem = (id) => {
-        if(ownedItems.includes(id)) return;
-        if(coins >= 100) {
-            coins -= 100;
-            ownedItems.push(id);
-            updateCoins();
-            enterShop(); 
-        } else {
-            alert("金幣不足！快去挑戰關卡賺錢吧。");
-        }
-    };
-
-    /* 3. 遊戲與章節：修復無法進入遊戲的問題 */
-    window.openCap = (k) => {
-        const d = gameData[k];
-        if(!d) return;
-        document.getElementById('cap-label').innerText = "Chapter " + k.replace('ch','');
-        const sects = Array.isArray(d.sections) ? d.sections : Object.values(d.sections);
-        document.getElementById('subhead-container').innerHTML = sects.map((s, i) => {
-            const sNum = (i + 1).toString().padStart(2, '0');
-            return `<div class="grid-item" onclick="launchGame('${k}',${i})"><img src="images/${k}_s${sNum}.png" onerror="this.src='images/${k}.png'"></div>`;
-        }).join('');
-        goto('v-levels');
-    };
-
-    window.launchGame = (ch, idx) => {
-        // 先啟動一次錄音權限
-        if(recognition) { try { recognition.start(); setTimeout(() => recognition.stop(), 50); } catch(e) {} }
-        const sects = Array.isArray(gameData[ch].sections) ? gameData[ch].sections : Object.values(gameData[ch].sections);
-        const section = sects[idx];
-        curWords = Array.isArray(section.words) ? section.words : Object.values(section.words);
-        curIdx = 0; isStop = false;
-        goto('v-game');
-        runStep();
-    };
-
-    async function runStep() {
-        if(isStop || curIdx >= curWords.length) {
-            if(!isStop) alert("章節完成！");
-            goto('v-levels'); return;
-        }
-        const w = curWords[curIdx];
-        const card = document.getElementById('game-card');
-        const resLayer = document.getElementById('res-layer');
-        const resImg = document.getElementById('res-img');
+    window.openSection = (sk) => {
+        const sec = gameData[currentChKey].sections[sk];
+        const words = (sec.words || []).slice(0, 5);
+        let idx = 0;
+        document.getElementById('section-heading-text').innerText = sec.name;
+        window.showView('word-view');
         
-        card.className = "word-card";
-        resLayer.classList.remove('show-res');
-        document.getElementById('word-q').innerHTML = formatWord(w);
-        document.getElementById('word-a').innerText = w.a || "";
-        document.getElementById('prog-display').innerText = `${curIdx+1}/${curWords.length}`;
-        
-        document.getElementById('game-hint').innerText = "Wait...";
-        await new Promise(r => setTimeout(r, 1000));
-        if(isStop) return;
-
-        document.getElementById('game-hint').innerText = "Listen...";
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(w.q); msg.lang = 'en-US';
-        window.speechSynthesis.speak(msg);
-        await new Promise(r => setTimeout(r, 1500));
-        if(isStop) return;
-
-        document.getElementById('game-hint').innerText = "Speak!";
-        card.classList.add('listening');
-        
-        let recognitionProcessed = false;
-        recognition.onresult = async (e) => {
-            recognitionProcessed = true;
-            const res = e.results[0][0].transcript.toLowerCase().trim();
-            if(res === w.q.toLowerCase().trim() || res.includes(w.q.toLowerCase().trim())) {
-                card.classList.add('correct');
-                resImg.src = "images/success01.png";
-                coins += 20; updateCoins();
-            } else {
-                card.classList.add('wrong');
-                resImg.src = "images/success02.png";
+        const render = () => {
+            if(idx >= words.length) {
+                coins += 100;
+                // 更新所有顯示金幣的地方
+                document.querySelectorAll('.coin-display, .coin-box').forEach(el => el.innerText = "金幣: " + coins);
+                document.getElementById('word-list').innerHTML = `<div class="rec-box"><h2>🎉 完成挑戰！</h2><button onclick="location.reload()" class="rec-btn">返回</button></div>`;
+                return;
             }
-            resLayer.classList.add('show-res');
-            await new Promise(r => setTimeout(r, 1200)); 
-            curIdx++; runStep();
+            const w = words[idx];
+            document.getElementById('word-list').innerHTML = `
+                <div class="rec-box">
+                    <div style="font-size:3rem; font-weight:bold;">${w.parts.map(p => `<span class="c-${p.ty}">${p.t}</span>`).join('')}</div>
+                    <div style="font-size:1.5rem; color:#666; margin:20px 0;">${w.a}</div>
+                    <button id="rec-btn" class="rec-btn">按住錄音</button>
+                    <p>(${idx+1}/5)</p>
+                </div>`;
+            document.getElementById('rec-btn').onmousedown = async () => {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(stream);
+                recorder.start();
+                document.getElementById('rec-btn').onmouseup = () => { recorder.stop(); idx++; render(); };
+            };
         };
-
-        recognition.onerror = async () => { 
-            if(!recognitionProcessed) { 
-                recognitionProcessed = true; 
-                card.classList.add('wrong'); 
-                resImg.src="images/success02.png"; 
-                resLayer.classList.add('show-res'); 
-                await new Promise(r=>setTimeout(r,1200)); 
-                curIdx++; runStep(); 
-            } 
-        };
-        recognition.start();
-        setTimeout(() => { if(!recognitionProcessed) try{recognition.stop();}catch(e){} }, 5000);
-    }
-
-    /* 輔助函數 */
-    window.updateCoins = () => {
-        document.getElementById('home-coins').innerText = coins;
-        document.getElementById('game-coins').innerText = coins;
-        document.getElementById('shop-coins').innerText = coins;
+        render();
     };
 
-    window.exitGame = () => { isStop = true; window.speechSynthesis.cancel(); if(recognition)try{recognition.stop()}catch(e){} goto('v-levels'); };
-
-    function formatWord(w) {
-        if (w.parts && Array.isArray(w.parts)) return w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('');
-        return w.q;
-    }
-
-    (async function init() {
-        const snap = await getDoc(doc(db, "gameConfig", "content"));
-        if (snap.exists()) {
-            gameData = snap.data();
-            document.getElementById('chapter-menu').innerHTML = [1,2,3,4,5,6,7,8].map(i => `
-                <div class="grid-item" onclick="openCap('ch${i}')"><img src="images/ch${i}.png"></div>
-            `).join('');
+    async function loadData() {
+        const docSnap = await getDoc(doc(db, "gameConfig", "content"));
+        if (docSnap.exists()) {
+            gameData = docSnap.data();
+            document.getElementById('main-menu').innerHTML = Object.keys(chapterNames).map(k => 
+                `<div class="menu-card" onclick="window.route('${k}')"><img src="images/${k}.png"></div>`
+            ).join('');
         }
-    })();
+    }
+    loadData();
 </script>
 </body>
 </html>
