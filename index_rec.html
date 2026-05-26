@@ -3,94 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple Phonics V15.7 - Mobile Pro</title>
+    <title>Simple Phonics V14.9 - Final Fix</title>
     <style>
         :root { --primary: #651caa; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
-        body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; overflow-x: hidden; }
-        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; }
+        body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
-        
-        /* 頁面標題與佈局 */
         .header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 100; min-height: 65px; box-sizing: border-box; }
         .back-area, .play-area { width: 80px; display: flex; }
-        .img-btn { height: 40px !important; cursor: pointer; object-fit: contain; }
-        .heading-text { font-size: 1.2rem; font-weight: bold; color: #4b0082; text-align: center; }
-
-        /* 單字顯示 */
-        .section-box { padding: 15px; border-bottom: 1px solid #f1f5f9; }
-        .word-item { cursor: pointer; display: inline-block; padding: 5px 10px; margin: 5px; color: #1e293b; font-weight: bold; border-radius: 10px; border: 2px solid transparent; font-size: 1.6rem; transition: background 0.2s; }
-        .word-mean { color: #64748b; font-size: 1.1rem; font-weight: normal; margin-left: 4px; }
-        .c-1 { color: #000; } .c-2 { color: #007bff; } .c-3 { color: #ff8800; } .c-4 { color: #28a745; } .u { text-decoration: underline; }
-
-        /* 手機強化：全螢幕反饋層 (核心修改) */
-        #mobile-feedback {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999; /* 確保在最頂層 */
-            pointer-events: none; /* 不影響點擊 */
-        }
-        .fb-overlay-green { background: rgba(16, 185, 129, 0.9); display: flex !important; }
-        .fb-overlay-red { background: rgba(239, 68, 68, 0.9); display: flex !important; }
-        .fb-big-icon { font-size: 120px; color: white; margin-bottom: 20px; }
-        .fb-big-text { font-size: 2.5rem; color: white; font-weight: bold; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-
-        /* 正在聽音的狀態 */
-        .listening-glow { background: #fffbeb !important; border: 2px solid #f59e0b !important; box-shadow: 0 0 15px #f59e0b; }
-
-        /* 選單與設定 */
+        .back-area { justify-content: flex-start; }
+        .play-area { justify-content: flex-end; }
+        .img-btn { height: 40px !important; width: auto !important; cursor: pointer; object-fit: contain; }
+        .heading-area { flex: 1; display: flex; justify-content: center; align-items: center; text-align: center; }
+        .heading-text { font-size: 1.3rem; font-weight: bold; color: #4b0082; line-height: 1.2; }
+        .main-logo-container { width: 100%; padding: 0; line-height: 0; margin: 0; cursor: pointer; display: block; }
+        .main-logo { width: 100%; height: auto; display: block; }
+        .c-1 { color: #000000 !important; } .c-2 { color: #007bff !important; } .c-3 { color: #ff8800 !important; } .c-4 { color: #28a745 !important; } .c-5 { color: #9333ea !important; } .c-6 { color: #7a3a12 !important; } .u { text-decoration: underline !important; text-underline-offset: 4px; text-decoration-thickness: 3px; }
+        
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
-        .menu-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; overflow: hidden; cursor: pointer; }
-        .menu-card img { width: 100%; height: auto; display: block; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .modal-box { background: white; border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; box-sizing: border-box; }
-        .setting-panel { margin: 15px 0; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .menu-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; height: auto; }
+        .menu-card.small-icon { height: auto !important; min-height: unset !important; } 
+        .menu-card img { width: 100%; height: auto; display: block; object-fit: contain; }
+
+        .section-box { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        .inline-word-list { font-size: 1.5rem !important; line-height: 2.3 !important; font-weight: bold !important; }
+        .word-item { cursor: pointer; display: inline-block; padding: 0 10px; color: #1e293b; font-weight: bold !important; border-radius: 8px; }
+        .word-mean { color: #444; font-size: 1.1rem; font-weight: normal; margin-left: 4px; vertical-align: middle; }
+        .highlight-text { background: #ebf2ff; box-shadow: 0 0 0 2px #1fb338; }
+        .section-grid-double { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; }
+        .btn-card-img { width: 100%; height: auto; display: block; border-radius: 15px; cursor: pointer; border: 1px solid #f1f5f9; }
+        .word-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; justify-content: space-between; }
+        .word-card { flex: 1 1 calc(50% - 8px); min-width: 150px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 15px; cursor: pointer; padding: 8px 5px; background-color: #ffffff; border: 1px solid #e2e8f0; text-align: center; min-height: 90px; } 
+        .card-q { font-size: 1.8rem; font-weight: bold; width: 100%; text-align: center; line-height: 1.2; }
+        .card-a { font-size: 1.1rem; color: #64748b; margin-top: 2px; width: 100%; font-weight: bold; text-align: center; }
+        .highlight-card { border: 2px solid #1fb338 !important; background: #ebf2ff !important; transform: scale(1.02); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: white; border-radius: 20px; padding: 25px; width: 420px; max-height: 85vh; overflow-y: auto; text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div id="mobile-feedback">
-        <div id="m-icon" class="fb-big-icon"></div>
-        <div id="m-text" class="fb-big-text"></div>
-    </div>
-
     <div id="home-view">
-        <div style="cursor:pointer" onclick="window.toggleModal(true)"><img src="images/title_logo.png" style="width:100%"></div>
+        <div class="main-logo-container" onclick="window.toggleModal(true)"><img src="images/title_logo.png" class="main-logo"></div>
         <div id="main-menu" class="menu-grid"></div>
     </div>
     
     <div id="special-view" class="hidden">
         <div class="header">
             <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"></div>
-            <div id="special-heading-text" class="heading-text"></div>
+            <div class="heading-area"><div id="special-heading-text" class="heading-text"></div></div>
             <div class="play-area"><img id="special-play-all-img" src="images/play_all.png" class="img-btn"></div>
         </div>
         <div id="special-content"></div>
+    </div>
+
+    <div id="section-view" class="hidden">
+        <div class="header">
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"></div>
+            <div class="heading-area"><div id="chapter-heading-text" class="heading-text"></div></div>
+            <div class="play-area"></div>
+        </div>
+        <div id="section-list" class="section-grid-double"></div>
+    </div>
+
+    <div id="word-view" class="hidden">
+        <div class="header">
+            <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('section-view')"></div>
+            <div class="heading-area"><div id="section-heading-text" class="heading-text"></div></div>
+            <div class="play-area"><img id="word-play-all-img" src="images/play_all.png" class="img-btn"></div>
+        </div>
+        <div id="word-list" class="word-container"></div>
     </div>
 </div>
 
 <div id="intro-modal" class="modal-overlay hidden">
     <div class="modal-box">
-        <h3 style="text-align:center; color:var(--primary); margin-top:0;">學習及評分設定</h3>
-        <div class="setting-panel">
-            <div class="setting-row">
-                <span>朗讀次數：</span>
-                <select id="repeat-select"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>
-            </div>
-            <div class="setting-row">
-                <span>語音評分模式：</span>
-                <input type="checkbox" id="eval-mode" style="width:24px; height:24px;">
-            </div>
-            <p style="font-size:0.85rem; color:#64748b; margin:5px 0 0 0;">* 點擊單字後請對準麥克風清晰讀出。</p>
+        <h3 id="intro-title" style="cursor: pointer; text-align: center; color: var(--primary);">簡介</h3>
+        <p>透過音節拆解法，建立「見字能讀、聽音能拼」的自信。</p>
+        <p><strong>拼讀基礎：</strong>掌握 CVC 及 Digraphs 拼讀規律。</p>
+        <p><strong>主題詞彙：</strong>涵蓋八大生活情境，學以致用。</p>
+        <p><strong>音節拆解：</strong>視覺化呈現發音結構，告別死記硬背。</p>
+        
+        <div style="margin: 20px 0; padding: 10px; background: #eee; border-radius: 10px;">
+            <label style="font-weight: bold;">連讀次數：</label>
+            <select id="repeat-select" style="padding: 5px; font-size: 1rem;">
+                <option value="1">1次</option>
+                <option value="2" selected>2次</option>
+                <option value="3">3次</option>
+            </select>
         </div>
-        <button style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem;" onclick="window.toggleModal(false)">確定並開始</button>
+
+        <button style="width:100%; margin-top:10px; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="window.toggleModal(false)">開始學習</button>
+        <button id="sync-btn" style="width:100%; margin-top:15px; padding:12px; background:#1e293b; color:white; border:none; border-radius:10px; font-weight:bold;" class="hidden" onclick="window.syncToFirebase()">同步數據到 Firebase</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { 
         apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", 
@@ -103,107 +114,180 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let gameData = {};
-    let isEvalMode = false;
-    let repeatCount = 2;
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-    if(recognition) {
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
-    }
-
-    window.toggleModal = (show) => document.getElementById('intro-modal').classList.toggle('hidden', !show);
-    window.showView = (id) => {
-        document.querySelectorAll('.app-container > div').forEach(d => { if(d.id !== 'mobile-feedback') d.classList.add('hidden'); });
-        document.getElementById(id).classList.remove('hidden');
+    const chapterNames = {
+        ch_a: "Short Vowels (CVC)", ch_b: "Digraphs & Blends", ch_c: "Vowel Digraphs & Long Vowels", ch_d: "Silent Letters & Special Sound",
+        ch1: "1 認識自己 About Me", ch2: "2 家居空間Home Space", ch3: "3 美食天地 Food World", ch4: "4 日常生活 Daily Life",
+        ch5: "5 城鄉見聞 Town & Country", ch6: "6 樂在其中 Have Fun", ch7: "7 好好學習 Let's Learn", ch8: "8 綠色地球 Green Earth"
     };
 
-    // 強效手機反饋函數
-    function triggerFeedback(isCorrect) {
-        const overlay = document.getElementById('mobile-feedback');
-        const icon = document.getElementById('m-icon');
-        const text = document.getElementById('m-text');
+    let gameData = { };
+    let wordsAll = [];
+    let currentChKey = ""; 
+    let currentAbortController = null; 
+    let clickCount = 0;
+    
+    // 朗讀次數變數
+    let repeatCount = 2; 
 
-        overlay.className = isCorrect ? 'fb-overlay-green' : 'fb-overlay-red';
-        icon.innerHTML = isCorrect ? '✅' : '❌';
-        text.innerText = isCorrect ? 'Excellent!' : 'Try Again';
+    window.toggleModal = (show) => { 
+        document.getElementById('intro-modal').classList.toggle('hidden', !show); 
+    };
+    
+    // 監聽次數選擇
+    document.getElementById('repeat-select').onchange = (e) => {
+        repeatCount = parseInt(e.target.value);
+    };
 
-        // 顯示 1.2 秒後自動隱藏
-        setTimeout(() => {
-            overlay.className = '';
-            overlay.style.display = 'none';
-        }, 1200);
-    }
+    window.showView = (id) => { 
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; } 
+        document.querySelectorAll('.app-container > div').forEach(d => { if(!d.classList.contains('modal-overlay')) d.classList.add('hidden'); });
+        document.getElementById(id).classList.remove('hidden'); 
+    };
 
-    window.handleWordClick = async (word, elId) => {
-        window.speak(word);
-        if (!isEvalMode || !recognition) return;
+    window.route = (k) => { 
+        currentChKey = k;
+        if (k === 'ch_a' || k === 'ch_b'|| k === 'ch_c'|| k === 'ch_d') window.renderSpecial(k);
+        else window.renderChapterList(k);
+    };
 
-        const el = document.getElementById(elId);
-        el.classList.add('listening-glow');
+    window.renderSpecial = (k) => {
+        const item = gameData[k] || { sections: [] };
+        wordsAll = [];
+        let globalIdx = 0;
+        document.getElementById('special-heading-text').innerText = chapterNames[k];
+        const contentHtml = (item.sections || []).map(sec => {
+            const startIdx = globalIdx;
+            let ws = (sec.words || []).map(w => {
+                const idx = globalIdx++;
+                wordsAll.push(w);
+                let displayText = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : (w.p || w.q);
+                return `<span class="word-item" id="sp-${idx}" onclick="window.speak('${w.q}')">${displayText}<span class="word-mean">${w.a}</span></span>`;
+            }).join(' ');
+            return `<div class="section-box"><span style="color:#ad4f26; font-size:1.3rem; font-weight:bold; cursor:pointer;" onclick="window.playSection(${startIdx}, ${globalIdx})">${sec.name}</span><div class="inline-word-list">${ws}</div></div>`;
+        }).join('');
+        document.getElementById('special-content').innerHTML = contentHtml;
+        document.getElementById('special-play-all-img').onclick = function() { window.playAll(this, wordsAll, 'sp', 'highlight-text'); };
+        window.showView('special-view');
+    };
 
-        // 朗讀約 1 秒後開啟辨識
-        setTimeout(() => {
-            try {
-                recognition.start();
-                recognition.onresult = (event) => {
-                    const result = event.results[0][0].transcript.toLowerCase().trim();
-                    const target = word.toLowerCase().trim();
-                    el.classList.remove('listening-glow');
-                    
-                    if (result === target) triggerFeedback(true);
-                    else triggerFeedback(false);
-                };
-                recognition.onerror = () => {
-                    el.classList.remove('listening-glow');
-                    // 如果辨識失敗也給個提示，防止畫面卡住
-                };
-                recognition.onspeechend = () => recognition.stop();
-            } catch(e) {
-                el.classList.remove('listening-glow');
-            }
-        }, 1200);
+    window.renderChapterList = (k) => {
+        const item = gameData[k] || {sections:{}};
+        document.getElementById('chapter-heading-text').innerText = chapterNames[k];
+        const listHtml = Object.keys(item.sections || {}).sort().map(sk => {
+            let skImg = 's' + sk.replace(/[^0-9]/g, '').padStart(2, '0');
+            return `<div onclick="window.openSection('${sk}')"><img src="images/${k}_${skImg}.png" class="btn-card-img" onerror="this.src='images/placeholder.png'"></div>`;
+        }).join('');
+        document.getElementById('section-list').innerHTML = listHtml;
+        window.showView('section-view');
+    };
+
+    window.openSection = (sk) => {
+        const sec = gameData[currentChKey].sections[sk];
+        if (!sec) return;
+        document.getElementById('section-heading-text').innerText = sec.name;
+        document.getElementById('word-list').innerHTML = (sec.words || []).map((w, i) => {
+            let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : w.q;
+            return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="card-q">${h}</div><div class="card-a">${w.a}</div></div>`;
+        }).join('');
+        document.getElementById('word-play-all-img').onclick = function() { window.playAll(this, sec.words, 'card', 'highlight-card'); };
+        window.showView('word-view');
     };
 
     window.speak = (t) => {
         window.speechSynthesis.cancel();
         const m = new SpeechSynthesisUtterance(t);
-        m.lang = 'en-US'; m.rate = 0.8;
+        m.lang = 'en-US';
+        m.rate = 0.85;
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v => (v.name.includes('Google') && v.name.includes('Female')) || v.name.includes('Samantha') || v.name.includes('Zira'));
+        if (femaleVoice) m.voice = femaleVoice;
         window.speechSynthesis.speak(m);
     };
 
-    // 渲染章節內容
-    window.route = (k) => {
-        const item = gameData[k];
-        if(!item) return;
-        document.getElementById('special-heading-text').innerText = k.toUpperCase();
-        document.getElementById('special-content').innerHTML = item.sections.map((s, si) => `
-            <div class="section-box">
-                <div style="font-weight:bold; color:var(--primary); margin-bottom:5px;">${s.name}</div>
-                ${s.words.map((w, wi) => {
-                    const id = `w-${k}-${si}-${wi}`;
-                    let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u?'u':''}">${p.t}</span>`).join('') : w.q;
-                    return `<span id="${id}" class="word-item" onclick="window.handleWordClick('${w.q}', '${id}')">${h}<span class="word-mean">${w.a}</span></span>`;
-                }).join('')}
-            </div>
-        `).join('');
-        window.showView('special-view');
+    window.playAll = async (btn, words, prefix, highlightClass) => {
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.src = "images/play_all.png"; window.speechSynthesis.cancel(); return; }
+        const ctrl = { abort: false }; currentAbortController = ctrl; btn.src = "images/stop_btn.png"; 
+        for (let i = 0; i < words.length; i++) {
+            if (ctrl.abort) break;
+            const el = document.getElementById(`${prefix}-${i}`);
+            if (el) el.classList.add(highlightClass); 
+            
+            // 修改點：根據 repeatCount 循環朗讀
+            for (let r = 0; r < repeatCount; r++) {
+                if (ctrl.abort) break;
+                window.speak(words[i].q); 
+                await new Promise(res => setTimeout(res, 1600)); 
+            }
+            
+            if (el) el.classList.remove(highlightClass);
+        }
+        btn.src = "images/play_all.png"; currentAbortController = null;
     };
 
-    document.getElementById('eval-mode').onchange = (e) => isEvalMode = e.target.checked;
-    document.getElementById('repeat-select').onchange = (e) => repeatCount = parseInt(e.target.value);
+    window.playSection = async (start, end) => {
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; window.speechSynthesis.cancel(); return; }
+        const ctrl = { abort: false }; currentAbortController = ctrl;
+        for (let i = start; i < end; i++) {
+            if (ctrl.abort) break;
+            const el = document.getElementById(`sp-${i}`);
+            if (el) el.classList.add('highlight-text');
+            
+            // 修改點：根據 repeatCount 循環朗讀
+            for (let r = 0; r < repeatCount; r++) {
+                if (ctrl.abort) break;
+                window.speak(wordsAll[i].q);
+                await new Promise(res => setTimeout(res, 1600));
+            }
+            
+            if (el) el.classList.remove('highlight-text');
+        }
+        currentAbortController = null;
+    };
 
-    async function init() {
-        const snap = await getDoc(doc(db, "gameConfig", "content"));
-        if(snap.exists()) {
-            gameData = snap.data();
-            const menu = document.getElementById('main-menu');
-            menu.innerHTML = Object.keys(gameData).map(k => `<div class="menu-card" onclick="window.route('${k}')"><img src="images/${k}.png" onerror="this.src='images/placeholder.png'"></div>`).join('');
+    window.syncToFirebase = async () => {
+    try {
+        const cleanData = JSON.parse(JSON.stringify(gameData));
+        await setDoc(doc(db, "gameConfig", "content"), cleanData);
+        alert("✅ 同步成功！");
+    } catch (e) {
+        alert("❌ 同步失敗: " + e.message);
+        console.error("詳細錯誤細節:", e);
+    }
+};
+
+    document.getElementById('intro-title').onclick = () => {
+        clickCount++; if(clickCount >= 5) document.getElementById('sync-btn').classList.remove('hidden');
+    };
+
+    async function loadData() {
+        const docRef = doc(db, "gameConfig", "content");
+        try {
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                gameData = docSnap.data();
+                renderHome();
+                console.log("數據同步成功");
+            } else {
+                renderHome(); 
+            }
+        } catch (e) {
+            console.error("加載失敗:", e);
+            renderHome();
         }
     }
-    init();
+
+    function renderHome() {
+        const menu = document.getElementById('main-menu');
+        menu.innerHTML = Object.keys(chapterNames).map(k => {
+            const cls = (k === 'ch_a' || k === 'ch_b' || k === 'ch_c' || k === 'ch_d') ? 'small-icon' : 'chapter-icon';
+            return `<div class="menu-card ${cls}" onclick="window.route('${k}')"><img src="images/${k}.png" onerror="this.src='images/placeholder.png'"></div>`;
+        }).join('');
+    }
+
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+    window.speechSynthesis.getVoices();
+    loadData();
 </script>
+
 </body>
 </html>
