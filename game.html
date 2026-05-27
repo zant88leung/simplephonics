@@ -138,7 +138,7 @@
                 sub.innerText = "分析中...";
                 rec.onresult = (e) => {
                     const spoken = e.results[0][0].transcript.toLowerCase();
-                    if(spoken.includes(w.text.toLowerCase())) {
+                    if(spoken.includes(w.q.toLowerCase())) {
                         document.getElementById('result-msg').innerHTML = "<span style='color:green;'>優秀！ (+50 金幣)</span>";
                         coins += 50;
                     } else {
