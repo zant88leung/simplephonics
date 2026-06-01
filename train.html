@@ -52,13 +52,21 @@
         .price-tag { font-size: 0.9rem; font-weight: bold; margin-top: 4px; }
 
         /* 新增：放大圖片嘅彈出視窗 */
-.image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; backdrop-filter: blur(3px); }
-
+.image-modal { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.85); 
+    display: flex; align-items: center; justify-content: center; 
+    z-index: 1000; flex-direction: column; backdrop-filter: blur(3px);
+    touch-action: none; /* 防止滑動圖片時觸發整個網頁的滾動 */
+}
 .image-modal img { width: 80%; max-width: 350px; max-height: 65vh; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; background: white; padding: 10px; }
         .image-modal .close-btn { margin-top: 25px; padding: 12px 40px; background: #f59e0b; color: white; border: none; border-radius: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }    
    .modal-content-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 450px; padding: 0 10px; box-sizing: border-box; }
   .nav-arrow { font-size: 2.5rem; background: transparent; border: none; color: white; cursor: pointer; padding: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); user-select: none; } 
-   </style>
+ 
+ </style>
 </head>
 <body>
 
@@ -69,7 +77,10 @@
             <img src="images/title_logo_3.png" style="width:100%">
             <button class="guest-btn" onclick="window.guestLogin()">遊客試玩</button>
             <input id="username" placeholder="名稱 (4-10字)">
-            <input id="password" type="password" placeholder="密碼 (4-8字)">
+<div style="position: relative; width: 100%; margin: 8px 0;">
+    <input id="password" type="password" placeholder="密碼 (4-8字)" style="margin: 0; width: 100%; padding-right: 40px; box-sizing: border-box;">
+    <span id="toggle-pwd" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem; user-select: none;">👁️</span>
+</div>
             <button onclick="window.processAuth()">進入遊戲</button>
             <p class="hint-text" style="margin-bottom: 5px;">第一次輸入名稱及密碼，<br>系統將自動為您完成註冊！</p>
             
@@ -156,7 +167,7 @@
 <div id="image-modal" class="image-modal hidden">
         <div class="modal-content-wrapper">
             <button id="prev-img-btn" class="nav-arrow" onclick="window.navGift(-1)">◀</button>
-            <img id="enlarged-img" src="">
+<img id="enlarged-img" src="" draggable="false">
             <button id="next-img-btn" class="nav-arrow" onclick="window.navGift(1)">▶</button>
         </div>
         <button class="close-btn" onclick="window.closeModal()">關閉</button>
@@ -194,6 +205,18 @@
     let mediaRecorder, audioChunks = [];
 let ownedGifts = [];
 
+// --- 👁️ 新增：密碼顯示/隱藏切換功能 ---
+    document.getElementById('toggle-pwd').addEventListener('click', function() {
+        const pwdInput = document.getElementById('password');
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            this.innerText = '🙈'; // 閉眼圖示
+        } else {
+            pwdInput.type = 'password';
+            this.innerText = '👁️'; // 睜眼圖示
+        }
+    });
+
 // --- ☁️ 已修復：雲端存檔版登入邏輯 ---
     window.processAuth = async () => {
         const u = document.getElementById('username').value.trim();
@@ -213,11 +236,11 @@ let ownedGifts = [];
         try {
             await signInWithEmailAndPassword(auth, email, p);
             
-            if (u === "admin") {
-                window.showView('admin-view');
-                window.loadAdminData(); 
-                return; 
-            }
+if (u === "admin") {
+    window.showView('admin-view');
+    window.loadAdminData(); // 👈 解除封印！
+    return; 
+}
             
             const snap = await getDoc(doc(db, "users", u));
             window.currentUsername = u; 
@@ -637,6 +660,109 @@ window.buyGift = (index) => {
         window.updateCoinDisplay();
         window.renderGifts();
     };
+
+// --- 👆 新增：手機滑動切換寶物圖片功能 ---
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const imageModalBox = document.getElementById('image-modal');
+
+    // 當手指碰到螢幕時，記錄 X 座標
+    imageModalBox.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    // 當手指離開螢幕時，記錄 X 座標並計算滑動方向
+    imageModalBox.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+// --- 👑 新增：管理員載入數據 (精美表格版) ---
+window.loadAdminData = async () => {
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const listContainer = document.getElementById('admin-student-list');
+        
+        if (!listContainer) return;
+
+        // 建立表格的標題頭 (Header)
+        let html = `
+            <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; font-size: 0.95rem;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+                        <th style="padding: 10px;">👤 名稱</th>
+                        <th style="padding: 10px;">🪙 金幣</th>
+                        <th style="padding: 10px;">🕒 上次登入</th>
+                        <th style="padding: 10px; text-align: center;">⚙️ 操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        // 迴圈讀取每一個學生的資料
+        querySnapshot.forEach((docSnap) => {
+            const username = docSnap.id;
+            const data = docSnap.data();
+            const coins = data.coins || 0;
+            const lastLogin = data.lastLogin || "從未登入";
+
+            // 如果是 admin 自己，就不顯示在學生名單中（或者你想保留也可以，把這行刪掉即可）
+            if (username === "admin") return; 
+
+            // 產生表格內容 (Row)
+            html += `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px; font-weight: bold; color: #1e293b;">${username}</td>
+                    <td style="padding: 10px; color: #f59e0b; font-weight: bold;">${coins}</td>
+                    <td style="padding: 10px; font-size: 0.8rem; color: #64748b;">${lastLogin}</td>
+                    <td style="padding: 10px; text-align: center;">
+                        <button onclick="window.deleteStudent('${username}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">刪除</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        listContainer.innerHTML = html; // 將表格放進畫面
+
+    } catch (error) {
+        console.error("管理員載入數據失敗:", error);
+    }
+};
+
+// --- 🗑️ 新增：刪除學生的功能 ---
+window.deleteStudent = async (username) => {
+    // 彈出確認視窗，避免不小心按到
+    const isConfirm = confirm(`⚠️ 警告：確定要刪除學生「${username}」的遊戲記錄和金幣嗎？\n此動作無法復原！`);
+    
+    if (isConfirm) {
+        try {
+            // 從 Firebase 資料庫中刪除該學生的文件
+            await deleteDoc(doc(db, "users", username));
+            alert(`✅ 已成功刪除學生「${username}」的資料。`);
+            
+            // 刪除完後，自動重新載入表格，畫面才會更新
+            window.loadAdminData(); 
+        } catch (error) {
+            alert("❌ 刪除失敗：" + error.message);
+        }
+    }
+};
+
+    function handleSwipe() {
+        const threshold = 50; // 設定滑動的最小距離（像素），避免輕微晃動造成的誤觸
+        
+        if (touchEndX < touchStartX - threshold) {
+            // 向左滑動 👈 (下一張)
+            window.navGift(1);
+        }
+        
+        if (touchEndX > touchStartX + threshold) {
+            // 向右滑動 👉 (上一張)
+            window.navGift(-1);
+        }
+    }
 
 </script>
 </body>
