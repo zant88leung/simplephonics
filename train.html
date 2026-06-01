@@ -80,7 +80,7 @@
 
 .image-modal img { width: 80%; max-width: 350px; max-height: 65vh; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; background: white; padding: 10px; }
         .image-modal .close-btn { margin-top: 25px; padding: 12px 40px; background: #f59e0b; color: white; border: none; border-radius: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }    
-   .modal-content-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 450px; padding: 0 10px; box-sizing: border-box; }
+.modal-content-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 450px; padding: 0 10px; box-sizing: border-box; }
   .nav-arrow { font-size: 2.5rem; background: transparent; border: none; color: white; cursor: pointer; padding: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); user-select: none; } 
  
  </style>
@@ -183,13 +183,11 @@
 
 <div id="image-modal" class="image-modal hidden">
         <div class="modal-content-wrapper">
-            <button id="prev-img-btn" class="nav-arrow" onclick="window.navGift(-1)">◀</button>
-<img id="enlarged-img" src="" draggable="false">
-            <button id="next-img-btn" class="nav-arrow" onclick="window.navGift(1)">▶</button>
+            <img id="enlarged-img" src="" draggable="false">
         </div>
         <button class="close-btn" onclick="window.closeModal()">關閉</button>
     </div>
-    
+
     <div id="admin-view" class="hidden">
         
         <div style="margin-top: 15px;">
@@ -631,17 +629,6 @@ mediaRecorder.onstop = () => {
         }
     };
 
-    // 控制左右箭頭幾時應該消失（例如去到第一張或者最後一張）
-    window.updateGiftNavButtons = () => {
-        const prevBtn = document.getElementById('prev-img-btn');
-        const nextBtn = document.getElementById('next-img-btn');
-        
-        // 如果係第一張，隱藏左箭頭
-        prevBtn.style.visibility = (window.currentGiftIndex <= 0) ? 'hidden' : 'visible';
-        
-        // 如果係最後一張，隱藏右箭頭
-        nextBtn.style.visibility = (window.currentGiftIndex >= ownedGifts.length - 1) ? 'hidden' : 'visible';
-    };
 
     window.closeModal = () => { document.getElementById('image-modal').classList.add('hidden'); };    
 window.buyGift = (index) => {
