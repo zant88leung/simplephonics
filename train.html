@@ -45,23 +45,26 @@
         #p-en { font-size: 1.8rem; font-weight: bold; margin: 15px 0; display: inline-block; white-space: nowrap; }
         #p-en span { display: inline; margin: 0; padding: 0; line-height: 1; }
 
-        /* 寶物庫 */
-/* 寶物庫 (改為一排6個) */
-.gift-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 15px; }
+        /* 寶物庫 (改為一排6個) */
+        .gift-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 15px; }
         .gift-item { text-align: center; width: 100%; border: 1px solid #eee; padding: 5px; border-radius: 8px; }
         .gift-item img { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 6px; }
         .price-tag { font-size: 0.9rem; font-weight: bold; margin-top: 4px; }
 
         /* 新增：放大圖片嘅彈出視窗 */
-        .image-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; backdrop-filter: blur(3px); }
-        .image-modal img { width: 80%; max-width: 350px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; background: white; padding: 10px; }
-        .image-modal .close-btn { margin-top: 25px; padding: 12px 40px; background: #f59e0b; color: white; border: none; border-radius: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }    </style>
+.image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; backdrop-filter: blur(3px); }
+
+.image-modal img { width: 80%; max-width: 350px; max-height: 65vh; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; background: white; padding: 10px; }
+        .image-modal .close-btn { margin-top: 25px; padding: 12px 40px; background: #f59e0b; color: white; border: none; border-radius: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }    
+   .modal-content-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 450px; padding: 0 10px; box-sizing: border-box; }
+  .nav-arrow { font-size: 2.5rem; background: transparent; border: none; color: white; cursor: pointer; padding: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); user-select: none; } 
+   </style>
 </head>
 <body>
 
 <div class="app-container">
     
-<div id="login-view" class="login-view">
+    <div id="login-view" class="login-view">
         <div class="login-box">
             <img src="images/title_logo_3.png" style="width:100%">
             <button class="guest-btn" onclick="window.guestLogin()">遊客試玩</button>
@@ -73,7 +76,7 @@
             <p style="font-size: 0.82rem; color: #2563eb; margin: 5px 0 0 0; font-weight: bold;">
                 ⚠️ 長時間不登錄，將會被刪帳號
             </p>
-            </div>
+        </div>
     </div>
 
     <div id="home-view" class="hidden">
@@ -85,6 +88,12 @@
             </div>
             <div id="main-menu" style="display:contents"></div>
         </div>
+        
+        <div style="padding: 0 15px 20px 15px;">
+            <button onclick="window.location.href='index.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #2563eb; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+                📖 回去再練習一下
+            </button>
+        </div>
     </div>
 
     <div id="section-view" class="hidden">
@@ -92,7 +101,7 @@
         <div id="section-list" class="section-grid"></div>
     </div>
     
-<div id="word-view" class="hidden">
+    <div id="word-view" class="hidden">
         <div class="header">
             <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('section-view')"></div>
             <div id="word-title-text" class="heading-text"></div>
@@ -114,20 +123,18 @@
             <div class="coin-area" style="margin-left: auto; padding-right: 15px; font-weight: bold; color: #f59e0b;">💰 <span id="gift-coin-display">0</span></div>
         </div>
         
-        <div style="text-align: center; color: #2563eb; font-size: 0.95rem; font-weight: bold; margin: 15px 10px 5px 10px; background: #eff6ff; padding: 8px; border-radius: 8px; border: 1px dashed #93c5fd;">
-            💡 努力練習賺取金幣！！
-        </div>
-        <div id="message-box" style="height: 20px; text-align: center; color: red; font-weight: bold; margin: 5px 0;"></div>
-        <div id="gift-list" class="gift-list"></div>
+        <div id="message-box" style="height: 20px; text-align: center; color: red; font-weight: bold; margin: 0;"></div>
+        
+        <div id="gift-list" class="gift-list" style="margin-top: 0; padding-top: 0;"></div>
     </div>
-
-<div id="practice-view" class="hidden">
+    
+    <div id="practice-view" class="hidden">
         <div class="header">
             <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('word-view')"></div>
             
             <div id="practice-heading-text" class="heading-text"></div>
             
-<div class="coin-area" style="padding-right: 15px; font-weight: bold; color: #f59e0b; font-size: 1.5rem;">💰 <span id="practice-coin-display">0</span></div>        </div>        
+            <div class="coin-area" style="padding-right: 15px; font-weight: bold; color: #f59e0b; font-size: 1.5rem;">💰 <span id="practice-coin-display">0</span></div>        </div>        
         <div class="practice-container">
             <div id="p-zh" style="font-size:1.5rem; font-weight:bold; color:#666;"></div>
             <div id="p-en" style="font-size:2.8rem; font-weight:bold; margin:15px 0;"></div>
@@ -145,23 +152,17 @@
             </div>
         </div>
     </div>
-<div id="image-modal" class="image-modal hidden">
-        <img id="enlarged-img" src="">
-        <button class="close-btn" onclick="window.closeModal()">關閉</button>
-    </div>
-</div>
 
 <div id="image-modal" class="image-modal hidden">
-        <img id="enlarged-img" src="">
-        <button class="close-btn" onclick="window.closeModal()">關閉</button>
-    </div>
-
-    <div id="admin-view" class="hidden" style="padding: 15px;">
-        <div class="header" style="padding: 10px 0;">
-            <div class="back-area"><button onclick="window.showView('login-view')" style="padding: 6px 12px; background:#64748b; color:white; border:none; border-radius:6px; cursor:pointer;">登出</button></div>
-            <div class="heading-text">管理員後台</div>
-            <div class="play-area"></div>
+        <div class="modal-content-wrapper">
+            <button id="prev-img-btn" class="nav-arrow" onclick="window.navGift(-1)">◀</button>
+            <img id="enlarged-img" src="">
+            <button id="next-img-btn" class="nav-arrow" onclick="window.navGift(1)">▶</button>
         </div>
+        <button class="close-btn" onclick="window.closeModal()">關閉</button>
+    </div>
+    
+    <div id="admin-view" class="hidden">
         
         <div style="margin-top: 15px;">
             <h3 style="margin-bottom: 5px; color: #1e293b;">學生名單與進度</h3>
@@ -171,166 +172,98 @@
                 載入中...
             </div>
         </div>
-    </div>
+        </div>
 
-
+</div> 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    // ===== 【修改這裡】引入 collection, getDocs, deleteDoc 用於管理員功能 =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";    
-    const db = getFirestore(initializeApp({ apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", authDomain: "phonics-b096f.firebaseapp.com", projectId: "phonics-b096f", storageBucket: "phonics-b096f.firebasestorage.app", messagingSenderId: "315671176929", appId: "1:315671176929:web:9c525f86c381b6b0c179a0" }));
+    // 💡 引入 Firebase Authentication 模組
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+    const app = initializeApp({ apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", authDomain: "phonics-b096f.firebaseapp.com", projectId: "phonics-b096f", storageBucket: "phonics-b096f.firebasestorage.app", messagingSenderId: "315671176929", appId: "1:315671176929:web:9c525f86c381b6b0c179a0" });
+    const db = getFirestore(app);
+    const auth = getAuth(app); // 💡 初始化驗證服務
     
     const colorMap = { 1: "#000000", 2: "#2563eb", 3: "#f97316", 4: "#16a34a", 5: "#9333ea" };
     let gameData = {}, currentChKey = "", currentWords = [], currentIndex = 0;
     
-    // 全域狀態控制
     window.userCoins = 0;
     window.isPlaying = false;
     window.recordingCount = 0;
     let mediaRecorder, audioChunks = [];
-    let ownedGifts = JSON.parse(localStorage.getItem('myGifts') || '[]');
+let ownedGifts = [];
 
-// --- 升級安全版：從 Firebase 驗證管理員與學生 ---
+// --- ☁️ 已修復：雲端存檔版登入邏輯 ---
     window.processAuth = async () => {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
         
         if(!u || !p) return alert("請輸入名稱及密碼");
         
-        // 限制普通學生的字數（admin 帳號由於只有5個字，所以要放寬長度檢查）
         if(u !== "admin") {
             if(u.length < 4 || u.length > 10 || p.length < 4 || p.length > 8) {
                 return alert("名稱4-10字，密碼4-8字");
             }
         }
         
-        // 直接從 Firebase 讀取該用戶的資料
-        const snap = await getDoc(doc(db, "users", u));
+        const email = `${u}@phonics.internal`;
+        const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
         
-        if(!snap.exists()) {
-            // 安全防禦：如果資料庫未有 admin 帳號，禁止任何人從前端註冊 admin 這個名字
-            if (u === "admin") {
-                return alert("管理員帳號尚未在系統中設定，請聯絡系統管理員。");
-            }
+        try {
+            await signInWithEmailAndPassword(auth, email, p);
             
-            // 新註冊學生邏輯
-            const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
-            window.currentUsername = u; 
-            window.totalRecordings = 0;
-            
-            await setDoc(doc(db, "users", u), { password: p, coins: 0, recordings: 0, lastLogin: nowStr });
-            finishLogin(0, false);
-        } else {
-            // 帳號存在，先驗證密碼是否正確（包括普通學生和 admin）
-            if(snap.data().password !== p) return alert("密碼錯誤");
-            
-            // 密碼正確後，檢查是否為管理員
             if (u === "admin") {
                 window.showView('admin-view');
-                window.loadAdminData(); // 載入學生名單後台
-                return; // 攔截，不進入遊戲畫面
+                window.loadAdminData(); 
+                return; 
             }
             
-            // 舊學生登入邏輯
-            const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
+            const snap = await getDoc(doc(db, "users", u));
             window.currentUsername = u; 
-            window.totalRecordings = snap.data().recordings || 0;
+            window.totalRecordings = snap.exists() ? (snap.data().recordings || 0) : 0;
+            const currentCoins = snap.exists() ? (snap.data().coins || 0) : 0;
+            // 📥 從 Firebase 讀取該學生的專屬禮物清單
+            const currentGifts = snap.exists() ? (snap.data().gifts || []) : []; 
             
             await setDoc(doc(db, "users", u), { lastLogin: nowStr }, { merge: true });
-            finishLogin(snap.data().coins || 0, false);
-        }
-    };
-    
-    // ===== 【新增】管理員動態讀取所有學生數據 =====
-    window.loadAdminData = async () => {
-        const listContainer = document.getElementById('admin-student-list');
-        listContainer.innerHTML = "<p style='color:#64748b;'>正在讀取最新數據...</p>";
-        
-        try {
-            const querySnapshot = await getDocs(collection(db, "users"));
+            finishLogin(currentCoins, currentGifts, false);
             
-let tableHtml = `
-                <table style="width:100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
-                    <thead>
-                        <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
-                            <th style="padding: 10px; border: 1px solid #e2e8f0;">學生名稱</th>
-                            <th style="padding: 10px; border: 1px solid #e2e8f0;">金幣</th>
-                            <th style="padding: 10px; border: 1px solid #e2e8f0;">錄音次數</th> <th style="padding: 10px; border: 1px solid #e2e8f0;">最近登錄</th>
-                            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align:center;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            let hasStudents = false;
-            querySnapshot.forEach((userDoc) => {
-                const username = userDoc.id;
-                const data = userDoc.data();
+        } catch (err) {
+            try {
+                await createUserWithEmailAndPassword(auth, email, p);
+                if (u === "admin") return alert("管理員帳號不可由前端建立！");
                 
-                if (username === "admin") return;
-                hasStudents = true;
+                const snap = await getDoc(doc(db, "users", u));
+                window.currentUsername = u; 
                 
-                tableHtml += `
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight:bold;">${username}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; color: #f59e0b;">💰 ${data.coins || 0}</td>
-                        
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; color: #2563eb; font-weight:bold;">🎤 ${data.recordings || 0} 次</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${data.lastLogin || '無記錄'}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align:center;">
-                            <button onclick="window.deleteStudent('${username}')" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight:bold;">刪除戶口</button>
-                        </td>
-                    </tr>
-                `;
-            });            
-            tableHtml += `</tbody></table>`;
-            
-            if (!hasStudents) {
-                listContainer.innerHTML = "<p style='color:#94a3b8; text-align:center; padding:20px;'>目前資料庫內未有學生註冊帳號。</p>";
-            } else {
-                listContainer.innerHTML = tableHtml;
+                if (snap.exists()) {
+                    window.totalRecordings = snap.data().recordings || 0;
+                    const currentCoins = snap.data().coins || 0;
+                    const currentGifts = snap.data().gifts || []; 
+                    await setDoc(doc(db, "users", u), { lastLogin: nowStr }, { merge: true });
+                    finishLogin(currentCoins, currentGifts, false);
+                } else {
+                    window.totalRecordings = 0;
+                    // 🆕 新註冊時，在 Firebase 建立一個空的禮物清單 (gifts: [])
+                    await setDoc(doc(db, "users", u), { password: p, coins: 0, recordings: 0, gifts: [], lastLogin: nowStr });
+                    finishLogin(0, [], false);
+                }
+            } catch (regErr) {
+                if (regErr.code === 'auth/email-already-in-use') {
+                    alert("❌ 密碼錯誤！請重新輸入。");
+                } else {
+                    alert("系統異常，請稍後再試：" + regErr.message);
+                }
             }
-            
-        } catch (error) {
-            console.error(error);
-            listContainer.innerHTML = "<p style='color:red;'>數據加載失敗，請檢查 Firebase 權限設定。</p>";
         }
     };
 
-    // ===== 【新增】管理員刪除學生戶口功能 =====
-    window.deleteStudent = async (username) => {
-        if (!confirm(`⚠️ 警告：您確定要永久刪除學生「${username}」的戶口嗎？\n此學生的所有分數及進度將會消失，且無法復原！`)) {
-            return;
-        }
-        
-        try {
-            await deleteDoc(doc(db, "users", username));
-            alert(`已成功刪除學生「${username}」的帳號！`);
-            window.loadAdminData(); // 重新整理名單
-        } catch (error) {
-            console.error(error);
-            alert("刪除失敗，請確保管理員權限正常。");
-        }
-    };
-    window.guestLogin = () => { finishLogin(100, true); };
+    window.guestLogin = () => { finishLogin(100, [], true); };
 
-    // --- 密碼眼仔切換邏輯 ---
-    window.togglePassword = () => {
-        const pwdInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('toggle-eye');
-        
-        if (pwdInput.type === 'password') {
-            pwdInput.type = 'text';
-            eyeIcon.innerText = '🙈'; // 顯示密碼時，圖示變成合埋眼嘅馬騮 (或者可以改為 隱藏圖示)
-        } else {
-            pwdInput.type = 'password';
-            eyeIcon.innerText = '👁️'; // 隱藏密碼時，圖示變回眼仔
-        }
-    };
-
-    window.finishLogin = (coins, isGuest = false) => {
-        if (isGuest) { localStorage.removeItem('myGifts'); ownedGifts = []; }
-        else { ownedGifts = JSON.parse(localStorage.getItem('myGifts') || '[]'); }
+    // 接收來自 Firebase 的禮物清單
+    window.finishLogin = (coins, gifts, isGuest = false) => {
+        ownedGifts = gifts; // 將雲端資料賦予遊戲畫面
         window.userCoins = coins;
         window.showView('home-view');
         window.updateCoinDisplay();
@@ -352,24 +285,19 @@ let tableHtml = `
         if(id !== 'login-view') document.getElementById('login-view').classList.add('hidden');
     };
 
-    // --- 載入與導航 ---
-async function loadData() {
+    async function loadData() {
         const snap = await getDoc(doc(db, "gameConfig", "content"));
         if(snap.exists()){
             gameData = snap.data();
-            
-            // 內部繼續用 ch1~ch8，但圖片路徑就用 k.replace('ch', 'train') 轉做 train1.png
             document.getElementById('main-menu').innerHTML = Object.keys({ch1:1,ch2:2,ch3:3,ch4:4,ch5:5,ch6:6,ch7:7,ch8:8}).map(k => {
-                const imgName = k.replace('ch', 'train'); // 將 ch1 變成 train1
+                const imgName = k.replace('ch', 'train'); 
                 return `<div class="menu-card" onclick="window.route('${k}')"><img src="images/${imgName}.png"></div>`;
             }).join('');
         }
     }
     
-window.route = (k) => { 
+    window.route = (k) => { 
         currentChKey = k; 
-        
-        // 👇 喺呢度將 8 個 Chapter 嘅名稱改為中英文顯示
         document.getElementById('section-heading-text').innerText = ({
             ch1: "1 About Me 認識自己", 
             ch2: "2 My Home 家居空間", 
@@ -381,9 +309,7 @@ window.route = (k) => {
             ch8: "8 Green Earth 綠色地球"
         })[k]; 
         
-        // 下面這行保持不變，繼續自動讀取對應的單元圖片
         document.getElementById('section-list').innerHTML = Object.keys(gameData[k].sections).sort().map(sk => `<div onclick="window.openSection('${sk}')"><img src="images/${k}_s${sk.replace(/[^0-9]/g, '').padStart(2, '0')}.png" class="btn-card-img" onerror="this.src='images/placeholder.png'"></div>`).join(''); 
-        
         window.showView('section-view'); 
     };
 
@@ -398,31 +324,23 @@ window.route = (k) => {
         window.showView('word-view');
     };
 
-// 進入單題練習畫面 (普通模式)
     window.enterPractice = (i) => { 
-        window.isChallengeMode = false; // 確保重置為普通模式
+        window.isChallengeMode = false; 
         currentIndex = i; 
         window.recordingCount = 0; 
         window.renderPractice(); 
         window.showView('practice-view'); 
     };
 
-    // 【新增】啟動連續挑戰模式
     window.startChallengeMode = () => {
         if (!currentWords || currentWords.length === 0) return;
-        window.isChallengeMode = true; // 開啟自動連播模式
-        currentIndex = 0; // 由第一題開始
+        window.isChallengeMode = true; 
+        currentIndex = 0; 
         window.recordingCount = 0;
         window.renderPractice();
         window.showView('practice-view');
-        
-        // 進入後，等半秒自動播第一次示範
-        setTimeout(() => {
-            window.speakTarget();
-        }, 500);
     };
 
-    // 上一題/下一題 (如果中途手動撳，就退出挑戰模式)
     window.nav = (dir) => {
         if (window.isPlaying) return; 
         window.isChallengeMode = false; 
@@ -433,15 +351,12 @@ window.route = (k) => {
             window.renderPractice();
         }
     };
-window.renderPractice = () => { 
+
+    window.renderPractice = () => { 
         window.updateCoinDisplay();
-        
-        // ===== 【新增】自動用返該小節嘅主題名稱做 Heading =====
         const currentTheme = document.getElementById('word-title-text').innerText;
         document.getElementById('practice-heading-text').innerText = currentTheme;
-        // ==================================================
         
-        // 設定初始提示文字與顏色
         const msgEl = document.getElementById('status-msg');
         if (msgEl) {
             msgEl.innerText = "💡 提示：按住錄音讀出單字，系統會自動與示範作比較哦！";
@@ -458,9 +373,8 @@ window.renderPractice = () => {
         document.getElementById('next-btn').style.visibility = currentIndex < currentWords.length - 1 ? 'visible' : 'hidden'; 
     };
     
-// --- 聆聽與錄音邏輯 ---
-    // 【修改】加入 isAfterRecord 參數，用嚟判斷係咪錄音後嘅播放
-    window.speakTarget = (isAfterRecord = false) => {
+// --- 🔊 修正版：發音示範功能 (完全拿走跳題邏輯) ---
+    window.speakTarget = () => {
         if (window.isPlaying) return;
         
         const w = currentWords[currentIndex];
@@ -480,50 +394,30 @@ window.renderPractice = () => {
             document.getElementById('rec-btn').style.opacity = '1';
             
             const msgEl = document.getElementById('status-msg');
-            if (msgEl) {
+            if (msgEl && !msgEl.innerText.includes("恭喜")) {
                 msgEl.innerText = "🎤 準備好了嗎？按住錄音，跟示範比拼一下發音吧！";
                 msgEl.style.color = "#64748b"; 
             }
-
-            // ===== 【新增】挑戰模式自動跳下一題 =====
-            if (window.isChallengeMode && isAfterRecord) {
-                if (currentIndex < currentWords.length - 1) {
-                    // 如果未到最後一題，等1.5秒後自動去下一題
-                    msgEl.innerText = "⏳ 準備進入下一題...";
-                    msgEl.style.color = "#f59e0b";
-                    setTimeout(() => {
-                        currentIndex++;
-                        window.renderPractice();
-                        setTimeout(() => window.speakTarget(), 500); // 自動播下一題示範
-                    }, 1500);
-                } else {
-                    // 到咗最後一題，挑戰完結
-                    msgEl.innerText = "🎉 恭喜！全關挑戰完成！";
-                    msgEl.style.color = "#16a34a";
-                    window.isChallengeMode = false; // 挑戰結束
-                }
-            }
-            // ======================================
+            // ✂️ 這裡原本綁定的跳題代碼已經徹底刪除了！
         };
         window.speechSynthesis.speak(utterance);
     };
+
     const recBtn = document.getElementById('rec-btn');
     
-    // 按下/摸到按鈕：開始錄音
+    // --- 🎤 修正版：錄音與自動跳題邏輯 ---
     const startRecord = async (e) => { 
-        if (e) e.preventDefault(); // 防止手機端觸發長按選單
+        if (e) e.preventDefault(); 
         if (window.isPlaying) return; 
         
         const msgEl = document.getElementById('status-msg');
         msgEl.innerText = "錄音中... (最多10秒)"; 
         msgEl.style.color = "#2563eb"; 
         
-// 1. 關閉自動增益，防止瀏覽器在安靜時自動放大環境雜音
         const s = await navigator.mediaDevices.getUserMedia({
             audio: { autoGainControl: false, noiseSuppression: true, echoCancellation: true }
         }); 
         
-        // ===== 【升級版】真實震幅音量偵測機制 =====
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
         const analyser = audioCtx.createAnalyser();
@@ -531,92 +425,102 @@ window.renderPractice = () => {
         source.connect(analyser);
         analyser.fftSize = 256;
         
-        // 2. 改用 TimeDomain (時間域) 來抓取原始的聲音波形資料
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        
-        window.hasValidSound = false; // 記錄這10秒內是否有發出有效聲音
+        window.hasValidSound = false; 
         
         const checkVolume = () => {
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 analyser.getByteTimeDomainData(dataArray); 
-                
-                let maxVolume = 0; // 用來找出這一瞬間的「最大音量波動」
-                
+                let maxVolume = 0; 
                 for (let i = 0; i < dataArray.length; i++) {
-                    // 波形的靜音基準線是 128。我們計算聲音偏離 128 的絕對值
                     let volume = Math.abs(dataArray[i] - 128); 
-                    if (volume > maxVolume) {
-                        maxVolume = volume;
-                    }
+                    if (volume > maxVolume) { maxVolume = volume; }
                 }
-                
-                // maxVolume 的正常範圍大約是 0 到 128。
-                // 實測：純安靜的雜音通常在 0~5 之間。講話時會飆升到 20~80 以上。
-                // 如果您覺得 15 還是太容易過關，可以調高到 20 或 25。
-                if (maxVolume > 10) { 
-                    window.hasValidSound = true; 
-                }
-                
-                requestAnimationFrame(checkVolume); // 持續循環偵測
+                if (maxVolume > 10) { window.hasValidSound = true; }
+                requestAnimationFrame(checkVolume); 
             }
         };
-        // ================================
-
 
         mediaRecorder = new MediaRecorder(s); 
         audioChunks = []; 
         mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); }; 
         
-        mediaRecorder.onstop = () => { 
+mediaRecorder.onstop = () => { 
             clearTimeout(window.recordTimer); 
-            
-            // 【修改這裡】不僅要檢查有沒有檔案，還要檢查音量是否達標
             if (audioChunks.length === 0 || !window.hasValidSound) {
                 msgEl.style.color = "red";
                 msgEl.innerText = "沒有錄到聲音，請大聲一點再試！";
-                return; // 直接中斷，不加分
+                return; 
             }
 
-            // 成功錄音並達到音量：給1分
             window.userCoins += 1;
             window.recordingCount++;
-            msgEl.style.color = "#16a34a"; // 綠色提示
+            msgEl.style.color = "#16a34a"; 
             
-if (window.recordingCount % 10 === 0) { // 每連續錄音10次，給額外獎勵
-                window.userCoins += 20; // (你之前可能改咗做 20)
+            if (window.recordingCount % 10 === 0) { 
+                window.userCoins += 20; 
                 msgEl.innerText = "恭喜連續錄音，可得奬勵！";
             } else {
                 msgEl.innerText = "錄音成功 +1分";
             }
             window.updateCoinDisplay();
 
-            // ===== 【新增】累積總錄音次數，並即時備份上 Firebase =====
             window.totalRecordings += 1;
             if (window.currentUsername) {
                 setDoc(doc(db, "users", window.currentUsername), { 
-                    coins: window.userCoins,               // 順便更新最新嘅金幣數量
-                    recordings: window.totalRecordings     // 更新錄音總次數
+                    coins: window.userCoins,               
+                    recordings: window.totalRecordings     
                 }, { merge: true });
             }
-            // ==================================================
 
-            // 鎖定按鈕並播放錄音
             window.isPlaying = true;            
-// ...上面係錄音計分邏輯...
-const a = new Audio(URL.createObjectURL(new Blob(audioChunks))); 
-a.onended = () => {
-    setTimeout(() => {
-        window.isPlaying = false; 
-        window.speakTarget(true); // 這裡就是在錄音播放完畢後，自動播一次標準示範
-    }, 500);
-}; 
-a.play();
-                }; 
+            const a = new Audio(URL.createObjectURL(new Blob(audioChunks))); 
+            
+            // 1️⃣ 系統先播放學生剛剛的錄音
+            a.onended = () => {
+                setTimeout(() => {
+                    // 2️⃣ 學生錄音播完後，系統自動播一次「標準示範聲」作比較
+                    const w = currentWords[currentIndex];
+                    const enWord = (w.parts || []).map(p => p.t).join('');
+                    
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(enWord);
+                    utterance.lang = 'en-US';
+                    
+                    utterance.onend = () => {
+                        window.isPlaying = false; // 示範播完，解鎖狀態
+                        
+                        if (window.isChallengeMode) {
+                            // 3️⃣ 挑戰模式：聽完對比後，自動默默跳下一題 (下一題不會自動播示範)
+                            if (currentIndex < currentWords.length - 1) {
+                                msgEl.innerText = "⏳ 準備進入下一題...";
+                                msgEl.style.color = "#f59e0b";
+                                setTimeout(() => {
+                                    currentIndex++;
+                                    window.renderPractice();
+                                }, 1200); // 留 1.2 秒讓學生消化剛才的比較
+                            } else {
+                                msgEl.innerText = "🎉 恭喜！全關挑戰完成！";
+                                msgEl.style.color = "#16a34a";
+                                window.isChallengeMode = false; 
+                            }
+                        } else {
+                            // 普通模式：播完對比就停低，等學生自己按「下一題」
+                            msgEl.innerText = "✅ 比較完成！可以重錄或手動去下一題。";
+                            msgEl.style.color = "#2563eb";
+                        }
+                    };
+                    window.speechSynthesis.speak(utterance);
+                    
+                }, 500); // 停頓半秒再播示範，讓耳朵有個緩衝
+            }; 
+            a.play();
+        };
+        
         mediaRecorder.start(); 
-        checkVolume(); // 啟動音量監聽
+        checkVolume(); 
         recBtn.style.background = '#ef4444'; 
 
-        // 10秒強制停止機制
         window.recordTimer = setTimeout(() => {
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
@@ -624,30 +528,20 @@ a.play();
             }
         }, 10000); 
     };
-    
-    // 放開/離開按鈕：停止錄音
+
     const stopRecord = (e) => { 
         if (e) e.preventDefault();
         clearTimeout(window.recordTimer); 
-        
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop(); 
-        }
+        if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); }
         recBtn.style.background = '#fee2e2'; 
     };
 
-    // 同時綁定滑鼠與手機觸控事件
     recBtn.onmousedown = startRecord;
     recBtn.ontouchstart = startRecord;
     recBtn.onmouseup = stopRecord;
     recBtn.ontouchend = stopRecord;
 
-// --- 寶物庫 (每10個一組，同一價錢) ---
-    
-    // 你可以喺度設定總共有幾多個寶物 (例如 20個 = 2組, 30個 = 3組)
-    const totalGifts = 40; 
-    
-    // 設定每組嘅價錢：第1組(1-10)賣20分，第2組(11-20)賣40分，第3組(21-30)賣60分...
+    const totalGifts = 25; 
     const groupPrices = [20, 40, 60, 80]; 
     
     window.renderGifts = () => {
@@ -656,43 +550,66 @@ a.play();
         for(let i = 1; i <= totalGifts; i++){
             const id = `gift_${i.toString().padStart(3, '0')}`;
             const isOwned = ownedGifts.includes(id);
-            
-            // 計算呢個寶物屬於第幾組 (每 10 個一組)
-            // (i-1)除以10攞整數。例如: 第1-10個會得出 0，第11-20個得出 1
             const groupIndex = Math.floor((i - 1) / 10); 
-            const price = groupPrices[groupIndex] || 999; // 預設防錯價錢為 999
-            
+            const price = groupPrices[groupIndex] || 999; 
             const onClickAction = isOwned ? `window.showEnlarged('${id}')` : `window.buyGift(${i-1})`;
             
             list.innerHTML += `
                 <div class="gift-item" onclick="${onClickAction}" style="cursor: pointer;">
-                    <img src="images/${id}.png" style="filter: ${isOwned ? 'none' : 'brightness(0)'}">
+<img src="images/${id}.png" style="filter: ${isOwned ? 'none' : 'grayscale(100%)'}; opacity: ${isOwned ? '1' : '0.5'};">
                     <div class="price-tag" style="color: ${isOwned ? '#999' : '#e11d48'};">${isOwned ? '已擁有' : `💰${price}`}</div>
                 </div>`;
         }
     };
     
-    // 【放大圖片功能】
+// 記住而家睇緊 ownedGifts 陣列入面第幾個寶物
+    window.currentGiftIndex = 0;
+
     window.showEnlarged = (id) => {
         const modal = document.getElementById('image-modal');
         const img = document.getElementById('enlarged-img');
+        
+        // 喺已擁有嘅寶物清單入面，搵返呢個寶物排第幾
+        window.currentGiftIndex = ownedGifts.indexOf(id);
+        
         img.src = `images/${id}.png`;
         modal.classList.remove('hidden');
+        
+        // 更新左右箭頭狀態
+        window.updateGiftNavButtons();
     };
 
-    // 【關閉放大圖片】
-    window.closeModal = () => {
-        document.getElementById('image-modal').classList.add('hidden');
+    // 左右切換功能
+    window.navGift = (dir) => {
+        const newIndex = window.currentGiftIndex + dir;
+        // 確保唔會超出範圍
+        if (newIndex >= 0 && newIndex < ownedGifts.length) {
+            window.currentGiftIndex = newIndex;
+            const newId = ownedGifts[window.currentGiftIndex];
+            document.getElementById('enlarged-img').src = `images/${newId}.png`;
+            window.updateGiftNavButtons();
+        }
     };
 
-    window.buyGift = (index) => {
+    // 控制左右箭頭幾時應該消失（例如去到第一張或者最後一張）
+    window.updateGiftNavButtons = () => {
+        const prevBtn = document.getElementById('prev-img-btn');
+        const nextBtn = document.getElementById('next-img-btn');
+        
+        // 如果係第一張，隱藏左箭頭
+        prevBtn.style.visibility = (window.currentGiftIndex <= 0) ? 'hidden' : 'visible';
+        
+        // 如果係最後一張，隱藏右箭頭
+        nextBtn.style.visibility = (window.currentGiftIndex >= ownedGifts.length - 1) ? 'hidden' : 'visible';
+    };
+
+    window.closeModal = () => { document.getElementById('image-modal').classList.add('hidden'); };    
+window.buyGift = (index) => {
         const id = `gift_${(index + 1).toString().padStart(3, '0')}`;
         if(ownedGifts.includes(id)) return;
         
-        // 購買時同樣計返佢係邊組嘅價錢
         const groupIndex = Math.floor(index / 10);
         const price = groupPrices[groupIndex] || 999;
-        
         const msgBox = document.getElementById('message-box');
         
         if(window.userCoins < price) {
@@ -708,11 +625,19 @@ a.play();
         
         window.userCoins -= price;
         ownedGifts.push(id);
-        localStorage.setItem('myGifts', JSON.stringify(ownedGifts));
+        
+        // 將扣除後的金幣餘額與新獲得的禮物同步存入 Firebase
+        if (window.currentUsername) {
+            setDoc(doc(db, "users", window.currentUsername), { 
+                coins: window.userCoins,               
+                gifts: ownedGifts     
+            }, { merge: true });
+        }
+        
         window.updateCoinDisplay();
         window.renderGifts();
     };
-    
-    </script>
+
+</script>
 </body>
 </html>

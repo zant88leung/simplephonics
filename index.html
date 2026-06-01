@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple Phonics V15.0 - Smart Repeat</title>
+    <title>Simple Phonics V1.0 - Smart Repeat</title>
     <style>
         :root { --primary: #651caa; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
         body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
@@ -51,11 +51,17 @@
 <body>
 
 <div class="app-container">
-    <div id="home-view">
+<div id="home-view">
         <div class="main-logo-container" onclick="window.toggleModal(true)"><img src="images/title_logo.png" class="main-logo"></div>
         <div id="main-menu" class="menu-grid"></div>
+        
+        <div style="padding: 0 15px 20px 15px;">
+            <button onclick="window.location.href='train.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #f97316; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+                ⚔️ 練習足夠就可以去挑戰一下
+            </button>
+        </div>
     </div>
-    
+        
     <div id="special-view" class="hidden">
         <div class="header">
             <div class="back-area"><img src="images/back_btn.png" class="img-btn" onclick="window.showView('home-view')"></div>
