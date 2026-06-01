@@ -61,6 +61,23 @@
     z-index: 1000; flex-direction: column; backdrop-filter: blur(3px);
     touch-action: none; /* 防止滑動圖片時觸發整個網頁的滾動 */
 }
+
+/* 🛠️ 新增：隱藏左右換圖箭頭，並確保圖片完美置中 */
+
+#prev-img-btn, #next-img-btn {
+    display: none !important; /* 強制隱藏左、右箭頭按鈕 */
+}
+
+#enlarged-img {
+    max-width: 85%;          /* 限制圖片最大寬度，避免貼邊 */
+    max-height: 70vh;        /* 限制圖片最大高度，留出上下空間 */
+    object-fit: contain;     /* 保持圖片原本比例，不拉伸變形 */
+    margin: auto;            /* 在 Flexbox 容器內達成完美的上下左右置中 */
+    display: block;
+    border-radius: 12px;     /* 可選：為寶物圖片加上少少圓角，視覺上更精緻 */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5); /* 可選：加上立體陰影 */
+}
+
 .image-modal img { width: 80%; max-width: 350px; max-height: 65vh; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; background: white; padding: 10px; }
         .image-modal .close-btn { margin-top: 25px; padding: 12px 40px; background: #f59e0b; color: white; border: none; border-radius: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }    
    .modal-content-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 450px; padding: 0 10px; box-sizing: border-box; }
