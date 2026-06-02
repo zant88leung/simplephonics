@@ -35,15 +35,16 @@
         .word-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; justify-content: space-between; }
         .word-card { flex: 1 1 calc(50% - 8px); min-width: 150px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 15px; cursor: pointer; padding: 8px 5px; background-color: #ffffff; border: 1px solid #e2e8f0; text-align: center; min-height: 90px; } 
 .card-q { 
-    /* 設定字體大小：最小值 1.2rem，首選值 6vw (隨螢幕寬度變化)，最大值 1.8rem */
     font-size: clamp(1.2rem, 6vw, 1.8rem); 
     font-weight: bold; 
     width: 100%; 
     text-align: center; 
     line-height: 1.2; 
-    /* 建議依然保留換行作為最後防線 */
     overflow-wrap: break-word; 
 }
+/* 👇 加入這兩行 👇 */
+.card-q.long-word { font-size: clamp(1rem, 5vw, 1.4rem); letter-spacing: -0.3px; }
+.card-q.super-long { font-size: clamp(0.85rem, 4.5vw, 1.2rem); letter-spacing: -0.5px; }
         .card-a { font-size: 1.1rem; color: #64748b; margin-top: 2px; width: 100%; font-weight: bold; text-align: center; }
         .highlight-card { border: 2px solid #1fb338 !important; background: #ebf2ff !important; transform: scale(1.02); }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -203,18 +204,28 @@
         window.showView('section-view');
     };
 
-    window.openSection = (sk) => {
+window.openSection = (sk) => {
         const sec = gameData[currentChKey].sections[sk];
         if (!sec) return;
         document.getElementById('section-heading-text').innerText = sec.name;
         document.getElementById('word-list').innerHTML = (sec.words || []).map((w, i) => {
             let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : w.q;
-            return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="card-q">${h}</div><div class="card-a">${w.a}</div></div>`;
+            
+            // 👇 新增：自動判斷字母長度來決定 CSS Class 👇
+            let qClass = "card-q";
+            if (w.q.length >= 11) {
+                qClass = "card-q super-long"; // 超過 11 個字母 (如 granddaughter)
+            } else if (w.q.length >= 8) {
+                qClass = "card-q long-word";  // 8~10 個字母 (如 daughter)
+            }
+
+            // 將 class 替換成動態的 qClass
+            return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="${qClass}">${h}</div><div class="card-a">${w.a}</div></div>`;
         }).join('');
         document.getElementById('word-play-all-img').onclick = function() { window.playAll(this, sec.words, 'card', 'highlight-card'); };
         window.showView('word-view');
     };
-
+    
     window.speak = (t) => {
         window.speechSynthesis.cancel();
         const m = new SpeechSynthesisUtterance(t);
