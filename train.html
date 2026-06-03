@@ -92,7 +92,7 @@
     <div id="login-view" class="login-view">
         <div class="login-box">
             <img src="images/title_logo_3.png" style="width:100%">
-            <button class="guest-btn" onclick="window.guestLogin()">遊客試玩</button>
+            <button class="guest-btn" onclick="window.guestLogin()">訪客試玩</button>
             <input id="username" placeholder="名稱 (4-10字)">
 <div style="position: relative; width: 100%; margin: 8px 0;">
     <input id="password" type="password" placeholder="密碼 (4-8字)" style="margin: 0; width: 100%; padding-right: 40px; box-sizing: border-box;">
@@ -102,7 +102,7 @@
             <p class="hint-text" style="margin-bottom: 5px;">第一次輸入名稱及密碼，<br>系統將自動為您完成註冊！</p>
             
             <p style="font-size: 0.82rem; color: #2563eb; margin: 5px 0 0 0; font-weight: bold;">
-                ⚠️ 長時間不登錄，將會被刪帳號
+                ⚠️ 長時間不登錄，將會被刪帳號。
             </p>
         </div>
     </div>
@@ -182,11 +182,18 @@
     </div>
 
 <div id="image-modal" class="image-modal hidden">
-        <div class="modal-content-wrapper">
-            <img id="enlarged-img" src="" draggable="false">
-        </div>
-        <button class="close-btn" onclick="window.closeModal()">關閉</button>
+    <div class="modal-content-wrapper">
+        <img id="enlarged-img" src="" draggable="false">
     </div>
+    
+    <!-- 👇 新增這行提示文字 👇 -->
+    <p style="color: #f8fafc; font-size: 1.1rem; margin-top: 20px; margin-bottom: 0; font-weight: bold; text-shadow: 0 2px 6px rgba(0,0,0,0.9); letter-spacing: 1px;">
+        👈 左右滑動切換寶物 👉
+    </p>
+    <!-- 👆 新增這行提示文字 👆 -->
+
+    <button class="close-btn" onclick="window.closeModal()">關閉</button>
+</div>
 
     <div id="admin-view" class="hidden">
         
@@ -397,7 +404,7 @@ if (u === "admin") {
         
         const msgEl = document.getElementById('status-msg');
         if (msgEl) {
-            msgEl.innerText = "💡 提示：按住錄音讀出單字，系統會自動與示範作比較哦！";
+            msgEl.innerText = "💡 提示：錄音後與示範作比較哦！";
             msgEl.style.color = "#64748b"; 
         }
         
@@ -491,17 +498,18 @@ mediaRecorder.onstop = () => {
                 return; 
             }
 
-            window.userCoins += 1;
+window.userCoins += 10; // 答中每題獲得 10 分
             window.recordingCount++;
             msgEl.style.color = "#16a34a"; 
             
             if (window.recordingCount % 10 === 0) { 
-                window.userCoins += 20; 
-                msgEl.innerText = "恭喜連續錄音，可得奬勵！";
+                // 原本：window.userCoins += 20;
+                window.userCoins += 100; // 連續 10 題額外獎勵加碼至 100 分
+                msgEl.innerText = "恭喜連續錄音，額外獲得 100 金幣奬勵！";
             } else {
-                msgEl.innerText = "錄音成功 +1分";
+                msgEl.innerText = "錄音成功 +10分";
             }
-            window.updateCoinDisplay();
+                        window.updateCoinDisplay();
 
             window.totalRecordings += 1;
             if (window.currentUsername) {
@@ -579,28 +587,50 @@ mediaRecorder.onstop = () => {
     recBtn.onmouseup = stopRecord;
     recBtn.ontouchend = stopRecord;
 
-    const totalGifts = 25; 
-    const groupPrices = [20, 40, 60, 80]; 
+const totalGifts = 75; // 暫時只顯示 75 件
     
+    // 更新：階梯式遞增，300 封頂的定價函數
+    window.getGiftPrice = (index) => {
+        const itemNumber = index + 1; 
+        
+        // 每 20 件為一組 (例如 1-20 是第 0 組，21-40 是第 1 組)
+        const group = Math.floor((itemNumber - 1) / 20); 
+        
+        // 基礎價格 50，每組增加 50
+        const price = 50 + (group * 50); 
+        
+        // 最高封頂 300 金幣 (使用 Math.min 確保不會超過 300)
+        return Math.min(price, 300);
+    };
+
+    // 恢復簡潔的寶物庫渲染邏輯
     window.renderGifts = () => {
         const list = document.getElementById('gift-list');
         list.innerHTML = '';
+        
         for(let i = 1; i <= totalGifts; i++){
             const id = `gift_${i.toString().padStart(3, '0')}`;
             const isOwned = ownedGifts.includes(id);
-            const groupIndex = Math.floor((i - 1) / 10); 
-            const price = groupPrices[groupIndex] || 999; 
+            
+            // 呼叫新函數計算價格
+            const price = window.getGiftPrice(i - 1); 
             const onClickAction = isOwned ? `window.showEnlarged('${id}')` : `window.buyGift(${i-1})`;
             
             list.innerHTML += `
                 <div class="gift-item" onclick="${onClickAction}" style="cursor: pointer;">
-<img src="images/${id}.png" style="filter: ${isOwned ? 'none' : 'grayscale(100%)'}; opacity: ${isOwned ? '1' : '0.5'};">
-                    <div class="price-tag" style="color: ${isOwned ? '#999' : '#e11d48'};">${isOwned ? '已擁有' : `💰${price}`}</div>
+                    <img src="images/${id}.png" style="filter: ${isOwned ? 'none' : 'grayscale(100%)'}; opacity: ${isOwned ? '1' : '0.5'}; transition: all 0.3s;">
+                    <div class="price-tag" style="color: ${isOwned ? '#999' : '#e11d48'}; font-weight: ${isOwned ? 'normal' : 'bold'};">${isOwned ? '已擁有' : `💰${price}`}</div>
                 </div>`;
         }
     };
-    
-// 記住而家睇緊 ownedGifts 陣列入面第幾個寶物
+
+    // 👇👇👇 補上這個空的防錯函數，避免點擊放大圖片時當機 👇👇👇
+    window.updateGiftNavButtons = () => {
+        // 因為你在 CSS 隱藏了箭頭，這裡不需執行任何動作，但必須存在以防報錯
+    };
+    // 👆👆👆 補到這裡為止 👆👆👆
+
+    // 記住而家睇緊 ownedGifts 陣列入面第幾個寶物
     window.currentGiftIndex = 0;
 
     window.showEnlarged = (id) => {
@@ -632,19 +662,23 @@ mediaRecorder.onstop = () => {
 
     window.closeModal = () => { document.getElementById('image-modal').classList.add('hidden'); };    
 window.buyGift = (index) => {
+        // (如果有加入這段防作弊代碼，請把它刪除)
+        // if (index > ownedGifts.length) { ... } 
+
         const id = `gift_${(index + 1).toString().padStart(3, '0')}`;
         if(ownedGifts.includes(id)) return;
         
-        const groupIndex = Math.floor(index / 10);
-        const price = groupPrices[groupIndex] || 999;
+        const price = window.getGiftPrice(index);
         const msgBox = document.getElementById('message-box');
         
+        // ... 下面的扣除金幣邏輯保持不變        
         if(window.userCoins < price) {
             msgBox.style.color = "red";
             msgBox.innerText = "❌ 金幣不足！快啲去練習賺金幣啦！";
             setTimeout(() => { if (msgBox.innerText.includes("金幣不足")) msgBox.innerText = ""; }, 3000);
             return;
         }
+        
         
         msgBox.style.color = "#16a34a"; 
         msgBox.innerText = "✅ 成功購買寶物！點擊可放大欣賞。";
