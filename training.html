@@ -418,7 +418,7 @@ if (u === "admin") {
         document.getElementById('next-btn').style.visibility = currentIndex < currentWords.length - 1 ? 'visible' : 'hidden'; 
     };
     
-// --- 🔊 修正版：發音示範功能 (完全拿走跳題邏輯) ---
+// --- 🔊 修正版：發音示範功能 (完全拿走跳題邏輯 + 改為英式發音) ---
     window.speakTarget = () => {
         if (window.isPlaying) return;
         
@@ -427,7 +427,25 @@ if (u === "admin") {
         
         window.speechSynthesis.cancel(); 
         const utterance = new SpeechSynthesisUtterance(enWord);
-        utterance.lang = 'en-US';
+        
+        // 1. 改為英式英語，並統一語速
+        utterance.lang = 'en-GB';
+        utterance.rate = 0.85; 
+        
+        // 2. 尋找英式語音庫 (Serena, Hazel 或 Google UK)
+        const voices = window.speechSynthesis.getVoices();
+        let ukVoice = voices.find(v => 
+            (v.lang === 'en-GB' || v.lang === 'en_GB') && (
+                (v.name.includes('Google') && v.name.includes('Female')) || 
+                v.name.includes('Serena') || 
+                v.name.includes('Hazel')
+            )
+        );
+        // 3. 保底機制
+        if (!ukVoice) {
+            ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+        }
+        if (ukVoice) utterance.voice = ukVoice;
         
         window.isPlaying = true;
         document.getElementById('demo-btn').style.opacity = '0.5';
@@ -447,7 +465,7 @@ if (u === "admin") {
         };
         window.speechSynthesis.speak(utterance);
     };
-
+    
     const recBtn = document.getElementById('rec-btn');
     
     // --- 🎤 修正版：錄音與自動跳題邏輯 ---

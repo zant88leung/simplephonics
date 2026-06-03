@@ -226,16 +226,33 @@ window.openSection = (sk) => {
         window.showView('word-view');
     };
     
-    window.speak = (t) => {
-        window.speechSynthesis.cancel();
-        const m = new SpeechSynthesisUtterance(t);
-        m.lang = 'en-US';
-        m.rate = 0.85; // 語速稍慢，適合學習
-        const voices = window.speechSynthesis.getVoices();
-        const femaleVoice = voices.find(v => (v.name.includes('Google') && v.name.includes('Female')) || v.name.includes('Samantha') || v.name.includes('Zira'));
-        if (femaleVoice) m.voice = femaleVoice;
-        window.speechSynthesis.speak(m);
-    };
+window.speak = (t) => {
+    window.speechSynthesis.cancel();
+    const m = new SpeechSynthesisUtterance(t);
+    
+    // 1. 將語言改為英式英語 (British English)
+    m.lang = 'en-GB'; 
+    m.rate = 0.85; // 語速稍慢，適合學習
+    
+    const voices = window.speechSynthesis.getVoices();
+    
+    // 2. 優先尋找標準的英式女聲 (Google UK, Serena, 或 Hazel)
+    let ukVoice = voices.find(v => 
+        (v.lang === 'en-GB' || v.lang === 'en_GB') && (
+            (v.name.includes('Google') && v.name.includes('Female')) || 
+            v.name.includes('Serena') || 
+            v.name.includes('Hazel')
+        )
+    );
+    
+    // 3. 如果找不到上述特定的女聲，則保底選擇任何一個系統內建的英式發音
+    if (!ukVoice) {
+        ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+    }
+
+    if (ukVoice) m.voice = ukVoice;
+    window.speechSynthesis.speak(m);
+};
 
     window.playAll = async (btn, words, prefix, highlightClass) => {
         if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.src = "images/play_all.png"; window.speechSynthesis.cancel(); return; }
