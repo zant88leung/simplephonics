@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple Phonics V1.0 - Smart Repeat</title>
+    <title>Simple Phonics V1.0</title>
     <style>
         :root { --primary: #651caa; --bg: #f8fafc; --text: #1e293b; --accent: #f59e0b; }
         body { margin: 0; font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; }
@@ -66,7 +66,7 @@
         <div id="main-menu" class="menu-grid"></div>
         
         <div style="padding: 0 15px 20px 15px;">
-            <button onclick="window.location.href='training.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #f97316; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+            <button onclick="window.location.href='ios_training.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #f97316; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
                 ⚔️ 練習足夠就可以去挑戰一下
             </button>
         </div>
@@ -127,9 +127,9 @@
 </div>
 
 <script type="module">
-    // ... Firebase 初始化保持不變 ...
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // 🛡️ 移除最頂部的靜態 import，改為動態載入，防止腳本一開波就崩潰
+    let app, db;
+    let initializeApp, getFirestore, doc, setDoc, getDoc;
 
     const firebaseConfig = { 
         apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", 
@@ -139,8 +139,6 @@
         messagingSenderId: "315671176929", 
         appId: "1:315671176929:web:9c525f86c381b6b0c179a0" 
     };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
 
     const chapterNames = {
         ch_a: "Short Vowels (CVC)", ch_b: "Digraphs & Blends", ch_c: "Vowel Digraphs & Long Vowels", ch_d: "Silent Letters & Special Sound",
@@ -153,12 +151,35 @@
     let currentChKey = ""; 
     let currentAbortController = null; 
     let clickCount = 0;
-    let repeatCount = 2; // 預設改為 2 次
+    let repeatCount = 2; 
 
-    // 監聽次數選擇
     document.getElementById('repeat-select').addEventListener('change', (e) => {
         repeatCount = parseInt(e.target.value);
     });
+
+    // --- 🚀 Firebase 動態載入 (防護機制) ---
+    async function initSystem() {
+        try {
+            const [appMod, fsMod] = await Promise.all([
+                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"),
+                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js")
+            ]);
+            
+            initializeApp = appMod.initializeApp;
+            getFirestore = fsMod.getFirestore;
+            doc = fsMod.doc; 
+            setDoc = fsMod.setDoc; 
+            getDoc = fsMod.getDoc;
+            
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+        } catch (error) {
+            console.warn("⚠️ Firebase 動態載入失敗 (可能受限於 iOS 隱私設定或內建瀏覽器):", error);
+        } finally {
+            // 無論 Firebase 載入成功定失敗，最後都一定會執行 loadData 畫畫面
+            loadData();
+        }
+    }
 
     window.toggleModal = (show) => { document.getElementById('intro-modal').classList.toggle('hidden', !show); };
     window.showView = (id) => { 
@@ -204,58 +225,47 @@
         window.showView('section-view');
     };
 
-window.openSection = (sk) => {
+    window.openSection = (sk) => {
         const sec = gameData[currentChKey].sections[sk];
         if (!sec) return;
         document.getElementById('section-heading-text').innerText = sec.name;
         document.getElementById('word-list').innerHTML = (sec.words || []).map((w, i) => {
             let h = w.parts ? w.parts.map(p => `<span class="c-${p.ty} ${p.u ? 'u' : ''}">${p.t}</span>`).join('') : w.q;
             
-            // 👇 新增：自動判斷字母長度來決定 CSS Class 👇
             let qClass = "card-q";
-            if (w.q.length >= 11) {
-                qClass = "card-q super-long"; // 超過 11 個字母 (如 granddaughter)
-            } else if (w.q.length >= 8) {
-                qClass = "card-q long-word";  // 8~10 個字母 (如 daughter)
-            }
+            if (w.q.length >= 11) { qClass = "card-q super-long"; } 
+            else if (w.q.length >= 8) { qClass = "card-q long-word"; }
 
-            // 將 class 替換成動態的 qClass
             return `<div id="card-${i}" class="word-card" onclick="window.speak('${w.q}')"><div class="${qClass}">${h}</div><div class="card-a">${w.a}</div></div>`;
         }).join('');
         document.getElementById('word-play-all-img').onclick = function() { window.playAll(this, sec.words, 'card', 'highlight-card'); };
         window.showView('word-view');
     };
     
-window.speak = (t) => {
-    window.speechSynthesis.cancel();
-    const m = new SpeechSynthesisUtterance(t);
-    
-    // 1. 將語言改為英式英語 (British English)
-    m.lang = 'en-GB'; 
-    m.rate = 0.85; // 語速稍慢，適合學習
-    
-    const voices = window.speechSynthesis.getVoices();
-    
-    // 2. 優先尋找標準的英式女聲 (Google UK, Serena, 或 Hazel)
-    let ukVoice = voices.find(v => 
-        (v.lang === 'en-GB' || v.lang === 'en_GB') && (
-            (v.name.includes('Google') && v.name.includes('Female')) || 
-            v.name.includes('Serena') || 
-            v.name.includes('Hazel')
-        )
-    );
-    
-    // 3. 如果找不到上述特定的女聲，則保底選擇任何一個系統內建的英式發音
-    if (!ukVoice) {
-        ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
-    }
-
-    if (ukVoice) m.voice = ukVoice;
-    window.speechSynthesis.speak(m);
-};
+    window.speak = (t) => {
+        if (!window.speechSynthesis) return; 
+        try { window.speechSynthesis.cancel(); } catch(e){}
+        const m = new SpeechSynthesisUtterance(t);
+        
+        m.lang = 'en-GB'; 
+        m.rate = 0.85; 
+        
+        const voices = window.speechSynthesis.getVoices();
+        let ukVoice = voices.find(v => 
+            (v.lang === 'en-GB' || v.lang === 'en_GB') && (
+                (v.name.includes('Google') && v.name.includes('Female')) || 
+                v.name.includes('Serena') || 
+                v.name.includes('Hazel')
+            )
+        );
+        
+        if (!ukVoice) ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+        if (ukVoice) m.voice = ukVoice;
+        window.speechSynthesis.speak(m);
+    };
 
     window.playAll = async (btn, words, prefix, highlightClass) => {
-        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.src = "images/play_all.png"; window.speechSynthesis.cancel(); return; }
+        if (currentAbortController) { currentAbortController.abort = true; currentAbortController = null; btn.src = "images/play_all.png"; if(window.speechSynthesis) window.speechSynthesis.cancel(); return; }
         const ctrl = { abort: false }; currentAbortController = ctrl; btn.src = "images/stop_btn.png"; 
         
         for (let i = 0; i < words.length; i++) {
@@ -263,7 +273,6 @@ window.speak = (t) => {
             const el = document.getElementById(`${prefix}-${i}`);
             if (el) el.classList.add(highlightClass); 
             
-            // 重複朗讀邏輯
             for (let r = 0; r < repeatCount; r++) {
                 if (ctrl.abort) break;
                 window.speak(words[i].q);
@@ -278,7 +287,7 @@ window.speak = (t) => {
     window.playSection = async (start, end) => {
         if (currentAbortController) { 
             currentAbortController.abort = true; currentAbortController = null; 
-            window.speechSynthesis.cancel();
+            if(window.speechSynthesis) window.speechSynthesis.cancel();
             const pb = document.getElementById('special-play-all-img');
             if(pb) pb.src = "images/play_all.png";
             return; 
@@ -299,6 +308,7 @@ window.speak = (t) => {
     };
 
     window.syncToFirebase = async () => {
+        if(!setDoc || !doc || !db) { alert("❌ 未能連接 Firebase"); return; }
         try {
             const cleanData = JSON.parse(JSON.stringify(gameData));
             await setDoc(doc(db, "gameConfig", "content"), cleanData);
@@ -311,12 +321,15 @@ window.speak = (t) => {
     };
 
     async function loadData() {
-        const docRef = doc(db, "gameConfig", "content");
-        try {
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) { gameData = docSnap.data(); renderHome(); } 
-            else { renderHome(); }
-        } catch (e) { renderHome(); }
+        if (db) {
+            try {
+                const docSnap = await getDoc(doc(db, "gameConfig", "content"));
+                if (docSnap.exists()) { gameData = docSnap.data(); } 
+            } catch (e) { 
+                console.warn("無法從 Firebase 讀取資料:", e); 
+            }
+        }
+        renderHome(); // 確保一定會畫出主選單
     }
 
     function renderHome() {
@@ -327,8 +340,12 @@ window.speak = (t) => {
         }).join('');
     }
 
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-    loadData();
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => { try { window.speechSynthesis.getVoices(); } catch(e){} };
+    }
+    
+    // 啟動系統
+    initSystem();
 </script>
 
 </body>

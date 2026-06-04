@@ -118,7 +118,7 @@
         </div>
         
         <div style="padding: 0 15px 20px 15px;">
-            <button onclick="window.location.href='index.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #2563eb; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+            <button onclick="window.location.href='ios_index.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #2563eb; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
                 📖 回去再練習一下
             </button>
         </div>
@@ -209,15 +209,11 @@
 
 </div> 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";    
-    // 💡 引入 Firebase Authentication 模組
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    
-    const app = initializeApp({ apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", authDomain: "phonics-b096f.firebaseapp.com", projectId: "phonics-b096f", storageBucket: "phonics-b096f.firebasestorage.app", messagingSenderId: "315671176929", appId: "1:315671176929:web:9c525f86c381b6b0c179a0" });
-    const db = getFirestore(app);
-    const auth = getAuth(app); // 💡 初始化驗證服務
-    
+    // 🛡️ 移除靜態 import，改用動態載入，防止腳本一開波就崩潰
+    let db, auth;
+    let doc, getDoc, setDoc, collection, getDocs, deleteDoc;
+    let signInWithEmailAndPassword, createUserWithEmailAndPassword;
+
     const colorMap = { 1: "#000000", 2: "#2563eb", 3: "#f97316", 4: "#16a34a", 5: "#9333ea" };
     let gameData = {}, currentChKey = "", currentWords = [], currentIndex = 0;
     
@@ -225,31 +221,55 @@
     window.isPlaying = false;
     window.recordingCount = 0;
     let mediaRecorder, audioChunks = [];
-let ownedGifts = [];
+    let ownedGifts = [];
 
-// --- 👁️ 新增：密碼顯示/隱藏切換功能 ---
+    // --- 🚀 1. Firebase 動態載入 + try...catch 防禦 ---
+    async function initFirebase() {
+        try {
+            const [appMod, fsMod, authMod] = await Promise.all([
+                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"),
+                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"),
+                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js")
+            ]);
+
+            const app = appMod.initializeApp({ apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", authDomain: "phonics-b096f.firebaseapp.com", projectId: "phonics-b096f", storageBucket: "phonics-b096f.firebasestorage.app", messagingSenderId: "315671176929", appId: "1:315671176929:web:9c525f86c381b6b0c179a0" });
+            
+            db = fsMod.getFirestore(app);
+            auth = authMod.getAuth(app);
+            
+            doc = fsMod.doc; getDoc = fsMod.getDoc; setDoc = fsMod.setDoc;
+            collection = fsMod.collection; getDocs = fsMod.getDocs; deleteDoc = fsMod.deleteDoc;
+            signInWithEmailAndPassword = authMod.signInWithEmailAndPassword;
+            createUserWithEmailAndPassword = authMod.createUserWithEmailAndPassword;
+        } catch (error) {
+            console.warn("⚠️ Firebase 載入失敗 (iOS 無痕模式或網絡限制):", error);
+        }
+    }
+
+    initFirebase();
+
+    // --- 👁️ 密碼顯示/隱藏切換功能 ---
     document.getElementById('toggle-pwd').addEventListener('click', function() {
         const pwdInput = document.getElementById('password');
         if (pwdInput.type === 'password') {
             pwdInput.type = 'text';
-            this.innerText = '🙈'; // 閉眼圖示
+            this.innerText = '🙈';
         } else {
             pwdInput.type = 'password';
-            this.innerText = '👁️'; // 睜眼圖示
+            this.innerText = '👁️';
         }
     });
 
-// --- ☁️ 已修復：雲端存檔版登入邏輯 ---
+    // --- ☁️ 登入邏輯 (加入防禦) ---
     window.processAuth = async () => {
+        if (!auth || !db) return alert("⚠️ 系統無法連線至伺服器。請嘗試使用上面的「訪客試玩」。");
+
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value;
         
         if(!u || !p) return alert("請輸入名稱及密碼");
-        
-        if(u !== "admin") {
-            if(u.length < 4 || u.length > 10 || p.length < 4 || p.length > 8) {
-                return alert("名稱4-10字，密碼4-8字");
-            }
+        if(u !== "admin" && (u.length < 4 || u.length > 10 || p.length < 4 || p.length > 8)) {
+            return alert("名稱4-10字，密碼4-8字");
         }
         
         const email = `${u}@phonics.internal`;
@@ -258,17 +278,16 @@ let ownedGifts = [];
         try {
             await signInWithEmailAndPassword(auth, email, p);
             
-if (u === "admin") {
-    window.showView('admin-view');
-    window.loadAdminData(); // 👈 解除封印！
-    return; 
-}
+            if (u === "admin") {
+                window.showView('admin-view');
+                window.loadAdminData(); 
+                return; 
+            }
             
             const snap = await getDoc(doc(db, "users", u));
             window.currentUsername = u; 
             window.totalRecordings = snap.exists() ? (snap.data().recordings || 0) : 0;
             const currentCoins = snap.exists() ? (snap.data().coins || 0) : 0;
-            // 📥 從 Firebase 讀取該學生的專屬禮物清單
             const currentGifts = snap.exists() ? (snap.data().gifts || []) : []; 
             
             await setDoc(doc(db, "users", u), { lastLogin: nowStr }, { merge: true });
@@ -290,25 +309,20 @@ if (u === "admin") {
                     finishLogin(currentCoins, currentGifts, false);
                 } else {
                     window.totalRecordings = 0;
-                    // 🆕 新註冊時，在 Firebase 建立一個空的禮物清單 (gifts: [])
                     await setDoc(doc(db, "users", u), { password: p, coins: 0, recordings: 0, gifts: [], lastLogin: nowStr });
                     finishLogin(0, [], false);
                 }
             } catch (regErr) {
-                if (regErr.code === 'auth/email-already-in-use') {
-                    alert("❌ 密碼錯誤！請重新輸入。");
-                } else {
-                    alert("系統異常，請稍後再試：" + regErr.message);
-                }
+                if (regErr.code === 'auth/email-already-in-use') alert("❌ 密碼錯誤！請重新輸入。");
+                else alert("系統異常，請稍後再試：" + regErr.message);
             }
         }
     };
 
     window.guestLogin = () => { finishLogin(100, [], true); };
 
-    // 接收來自 Firebase 的禮物清單
     window.finishLogin = (coins, gifts, isGuest = false) => {
-        ownedGifts = gifts; // 將雲端資料賦予遊戲畫面
+        ownedGifts = gifts; 
         window.userCoins = coins;
         window.showView('home-view');
         window.updateCoinDisplay();
@@ -330,11 +344,23 @@ if (u === "admin") {
         if(id !== 'login-view') document.getElementById('login-view').classList.add('hidden');
     };
 
+    // --- 🚀 2. loadData 雙重保險 (try...catch + finally) ---
     async function loadData() {
-        const snap = await getDoc(doc(db, "gameConfig", "content"));
-        if(snap.exists()){
-            gameData = snap.data();
-            document.getElementById('main-menu').innerHTML = Object.keys({ch1:1,ch2:2,ch3:3,ch4:4,ch5:5,ch6:6,ch7:7,ch8:8}).map(k => {
+        if (db) {
+            try {
+                const snap = await getDoc(doc(db, "gameConfig", "content"));
+                if(snap.exists()){
+                    gameData = snap.data();
+                }
+            } catch (e) {
+                console.warn("無法從 Firebase 讀取題目:", e);
+            }
+        }
+        
+        // 🛡️ 確保無論如何，最後一定會畫出主選單
+        const menu = document.getElementById('main-menu');
+        if (menu) {
+            menu.innerHTML = Object.keys({ch1:1,ch2:2,ch3:3,ch4:4,ch5:5,ch6:6,ch7:7,ch8:8}).map(k => {
                 const imgName = k.replace('ch', 'train'); 
                 return `<div class="menu-card" onclick="window.route('${k}')"><img src="images/${imgName}.png"></div>`;
             }).join('');
@@ -344,21 +370,21 @@ if (u === "admin") {
     window.route = (k) => { 
         currentChKey = k; 
         document.getElementById('section-heading-text').innerText = ({
-            ch1: "1 About Me 認識自己", 
-            ch2: "2 My Home 家居空間", 
-            ch3: "3 Food Paradise 美食天地", 
-            ch4: "4 Daily Life 日常生活", 
-            ch5: "5 Town & Country 城鄉見聞", 
-            ch6: "6 Having Fun 樂在其中", 
-            ch7: "7 Good Learning 好好學習", 
-            ch8: "8 Green Earth 綠色地球"
+            ch1: "1 About Me 認識自己", ch2: "2 My Home 家居空間", ch3: "3 Food Paradise 美食天地", ch4: "4 Daily Life 日常生活", 
+            ch5: "5 Town & Country 城鄉見聞", ch6: "6 Having Fun 樂在其中", ch7: "7 Good Learning 好好學習", ch8: "8 Green Earth 綠色地球"
         })[k]; 
         
+        if (!gameData || !gameData[k] || !gameData[k].sections) {
+            alert("⚠️ 離線狀態或伺服器連線失敗，無法讀取題目！");
+            return;
+        }
+
         document.getElementById('section-list').innerHTML = Object.keys(gameData[k].sections).sort().map(sk => `<div onclick="window.openSection('${sk}')"><img src="images/${k}_s${sk.replace(/[^0-9]/g, '').padStart(2, '0')}.png" class="btn-card-img" onerror="this.src='images/placeholder.png'"></div>`).join(''); 
         window.showView('section-view'); 
     };
 
     window.openSection = (sk) => {
+        if (!gameData[currentChKey] || !gameData[currentChKey].sections[sk]) return;
         currentWords = gameData[currentChKey].sections[sk].words;
         document.getElementById('word-title-text').innerText = gameData[currentChKey].sections[sk].name;
         document.getElementById('word-list').innerHTML = currentWords.map((w, i) => 
@@ -418,21 +444,22 @@ if (u === "admin") {
         document.getElementById('next-btn').style.visibility = currentIndex < currentWords.length - 1 ? 'visible' : 'hidden'; 
     };
     
-// --- 🔊 修正版：發音示範功能 (完全拿走跳題邏輯 + 改為英式發音) ---
+    // --- 🚀 3. 語音功能保護 (防禦 iOS TTS 錯誤) ---
     window.speakTarget = () => {
         if (window.isPlaying) return;
-        
+        if (!window.speechSynthesis) return; // 🛡️ 避免舊裝置不支援語音而當機
+
         const w = currentWords[currentIndex];
         const enWord = (w.parts || []).map(p => p.t).join('');
         
-        window.speechSynthesis.cancel(); 
-        const utterance = new SpeechSynthesisUtterance(enWord);
+        try {
+            window.speechSynthesis.cancel(); 
+        } catch(e) {}
         
-        // 1. 改為英式英語，並統一語速
+        const utterance = new SpeechSynthesisUtterance(enWord);
         utterance.lang = 'en-GB';
         utterance.rate = 0.85; 
         
-        // 2. 尋找英式語音庫 (Serena, Hazel 或 Google UK)
         const voices = window.speechSynthesis.getVoices();
         let ukVoice = voices.find(v => 
             (v.lang === 'en-GB' || v.lang === 'en_GB') && (
@@ -441,10 +468,7 @@ if (u === "admin") {
                 v.name.includes('Hazel')
             )
         );
-        // 3. 保底機制
-        if (!ukVoice) {
-            ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
-        }
+        if (!ukVoice) ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
         if (ukVoice) utterance.voice = ukVoice;
         
         window.isPlaying = true;
@@ -455,20 +479,17 @@ if (u === "admin") {
             window.isPlaying = false; 
             document.getElementById('demo-btn').style.opacity = '1';
             document.getElementById('rec-btn').style.opacity = '1';
-            
             const msgEl = document.getElementById('status-msg');
             if (msgEl && !msgEl.innerText.includes("恭喜")) {
                 msgEl.innerText = "🎤 準備好了嗎？按住錄音，跟示範比拼一下發音吧！";
                 msgEl.style.color = "#64748b"; 
             }
-            // ✂️ 這裡原本綁定的跳題代碼已經徹底刪除了！
         };
         window.speechSynthesis.speak(utterance);
     };
     
     const recBtn = document.getElementById('rec-btn');
     
-    // --- 🎤 修正版：錄音與自動跳題邏輯 ---
     const startRecord = async (e) => { 
         if (e) e.preventDefault(); 
         if (window.isPlaying) return; 
@@ -477,120 +498,123 @@ if (u === "admin") {
         msgEl.innerText = "錄音中... (最多10秒)"; 
         msgEl.style.color = "#2563eb"; 
         
-        const s = await navigator.mediaDevices.getUserMedia({
-            audio: { autoGainControl: false, noiseSuppression: true, echoCancellation: true }
-        }); 
-        
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-        const analyser = audioCtx.createAnalyser();
-        const source = audioCtx.createMediaStreamSource(s);
-        source.connect(analyser);
-        analyser.fftSize = 256;
-        
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        window.hasValidSound = false; 
-        
-        const checkVolume = () => {
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                analyser.getByteTimeDomainData(dataArray); 
-                let maxVolume = 0; 
-                for (let i = 0; i < dataArray.length; i++) {
-                    let volume = Math.abs(dataArray[i] - 128); 
-                    if (volume > maxVolume) { maxVolume = volume; }
+        try {
+            const s = await navigator.mediaDevices.getUserMedia({
+                audio: { autoGainControl: false, noiseSuppression: true, echoCancellation: true }
+            }); 
+            
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const audioCtx = new AudioContext();
+            const analyser = audioCtx.createAnalyser();
+            const source = audioCtx.createMediaStreamSource(s);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            window.hasValidSound = false; 
+            
+            const checkVolume = () => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    analyser.getByteTimeDomainData(dataArray); 
+                    let maxVolume = 0; 
+                    for (let i = 0; i < dataArray.length; i++) {
+                        let volume = Math.abs(dataArray[i] - 128); 
+                        if (volume > maxVolume) { maxVolume = volume; }
+                    }
+                    if (maxVolume > 10) { window.hasValidSound = true; }
+                    requestAnimationFrame(checkVolume); 
                 }
-                if (maxVolume > 10) { window.hasValidSound = true; }
-                requestAnimationFrame(checkVolume); 
-            }
-        };
+            };
 
-        mediaRecorder = new MediaRecorder(s); 
-        audioChunks = []; 
-        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); }; 
-        
-mediaRecorder.onstop = () => { 
-            clearTimeout(window.recordTimer); 
-            if (audioChunks.length === 0 || !window.hasValidSound) {
-                msgEl.style.color = "red";
-                msgEl.innerText = "沒有錄到聲音，請大聲一點再試！";
-                return; 
-            }
-
-window.userCoins += 10; // 答中每題獲得 10 分
-            window.recordingCount++;
-            msgEl.style.color = "#16a34a"; 
+            mediaRecorder = new MediaRecorder(s); 
+            audioChunks = []; 
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); }; 
             
-            if (window.recordingCount % 10 === 0) { 
-                // 原本：window.userCoins += 20;
-                window.userCoins += 100; // 連續 10 題額外獎勵加碼至 100 分
-                msgEl.innerText = "恭喜連續錄音，額外獲得 100 金幣奬勵！";
-            } else {
-                msgEl.innerText = "錄音成功 +10分";
-            }
-                        window.updateCoinDisplay();
+            mediaRecorder.onstop = () => { 
+                clearTimeout(window.recordTimer); 
+                if (audioChunks.length === 0 || !window.hasValidSound) {
+                    msgEl.style.color = "red";
+                    msgEl.innerText = "沒有錄到聲音，請大聲一點再試！";
+                    return; 
+                }
 
-            window.totalRecordings += 1;
-            if (window.currentUsername) {
-                setDoc(doc(db, "users", window.currentUsername), { 
-                    coins: window.userCoins,               
-                    recordings: window.totalRecordings     
-                }, { merge: true });
-            }
+                window.userCoins += 10;
+                window.recordingCount++;
+                msgEl.style.color = "#16a34a"; 
+                
+                if (window.recordingCount % 10 === 0) { 
+                    window.userCoins += 100;
+                    msgEl.innerText = "恭喜連續錄音，額外獲得 100 金幣奬勵！";
+                } else {
+                    msgEl.innerText = "錄音成功 +10分";
+                }
+                window.updateCoinDisplay();
 
-            window.isPlaying = true;            
-            const a = new Audio(URL.createObjectURL(new Blob(audioChunks))); 
-            
-            // 1️⃣ 系統先播放學生剛剛的錄音
-            a.onended = () => {
-                setTimeout(() => {
-                    // 2️⃣ 學生錄音播完後，系統自動播一次「標準示範聲」作比較
-                    const w = currentWords[currentIndex];
-                    const enWord = (w.parts || []).map(p => p.t).join('');
-                    
-                    window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(enWord);
-                    utterance.lang = 'en-US';
-                    
-                    utterance.onend = () => {
-                        window.isPlaying = false; // 示範播完，解鎖狀態
+                window.totalRecordings += 1;
+                if (window.currentUsername && setDoc && doc && db) {
+                    setDoc(doc(db, "users", window.currentUsername), { 
+                        coins: window.userCoins,               
+                        recordings: window.totalRecordings     
+                    }, { merge: true });
+                }
+
+                window.isPlaying = true;            
+                const a = new Audio(URL.createObjectURL(new Blob(audioChunks))); 
+                
+                a.onended = () => {
+                    setTimeout(() => {
+                        const w = currentWords[currentIndex];
+                        const enWord = (w.parts || []).map(p => p.t).join('');
                         
-                        if (window.isChallengeMode) {
-                            // 3️⃣ 挑戰模式：聽完對比後，自動默默跳下一題 (下一題不會自動播示範)
-                            if (currentIndex < currentWords.length - 1) {
-                                msgEl.innerText = "⏳ 準備進入下一題...";
-                                msgEl.style.color = "#f59e0b";
-                                setTimeout(() => {
-                                    currentIndex++;
-                                    window.renderPractice();
-                                }, 1200); // 留 1.2 秒讓學生消化剛才的比較
-                            } else {
-                                msgEl.innerText = "🎉 恭喜！全關挑戰完成！";
-                                msgEl.style.color = "#16a34a";
-                                window.isChallengeMode = false; 
-                            }
+                        if (window.speechSynthesis) {
+                            try { window.speechSynthesis.cancel(); } catch(e){}
+                            const utterance = new SpeechSynthesisUtterance(enWord);
+                            utterance.lang = 'en-US';
+                            
+                            utterance.onend = () => {
+                                window.isPlaying = false;
+                                if (window.isChallengeMode) {
+                                    if (currentIndex < currentWords.length - 1) {
+                                        msgEl.innerText = "⏳ 準備進入下一題...";
+                                        msgEl.style.color = "#f59e0b";
+                                        setTimeout(() => {
+                                            currentIndex++;
+                                            window.renderPractice();
+                                        }, 1200);
+                                    } else {
+                                        msgEl.innerText = "🎉 恭喜！全關挑戰完成！";
+                                        msgEl.style.color = "#16a34a";
+                                        window.isChallengeMode = false; 
+                                    }
+                                } else {
+                                    msgEl.innerText = "✅ 比較完成！可以重錄或手動去下一題。";
+                                    msgEl.style.color = "#2563eb";
+                                }
+                            };
+                            window.speechSynthesis.speak(utterance);
                         } else {
-                            // 普通模式：播完對比就停低，等學生自己按「下一題」
-                            msgEl.innerText = "✅ 比較完成！可以重錄或手動去下一題。";
-                            msgEl.style.color = "#2563eb";
+                            window.isPlaying = false;
                         }
-                    };
-                    window.speechSynthesis.speak(utterance);
-                    
-                }, 500); // 停頓半秒再播示範，讓耳朵有個緩衝
-            }; 
-            a.play();
-        };
-        
-        mediaRecorder.start(); 
-        checkVolume(); 
-        recBtn.style.background = '#ef4444'; 
+                    }, 500); 
+                }; 
+                a.play();
+            };
+            
+            mediaRecorder.start(); 
+            checkVolume(); 
+            recBtn.style.background = '#ef4444'; 
 
-        window.recordTimer = setTimeout(() => {
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                recBtn.style.background = '#fee2e2';
-            }
-        }, 10000); 
+            window.recordTimer = setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                    recBtn.style.background = '#fee2e2';
+                }
+            }, 10000); 
+        } catch(e) {
+            msgEl.style.color = "red";
+            msgEl.innerText = "❌ 無法存取麥克風，請檢查權限設定。";
+            console.error(e);
+        }
     };
 
     const stopRecord = (e) => { 
@@ -605,23 +629,15 @@ window.userCoins += 10; // 答中每題獲得 10 分
     recBtn.onmouseup = stopRecord;
     recBtn.ontouchend = stopRecord;
 
-const totalGifts = 75; // 暫時只顯示 75 件
+    const totalGifts = 75; 
     
-    // 更新：階梯式遞增，300 封頂的定價函數
     window.getGiftPrice = (index) => {
         const itemNumber = index + 1; 
-        
-        // 每 20 件為一組 (例如 1-20 是第 0 組，21-40 是第 1 組)
         const group = Math.floor((itemNumber - 1) / 20); 
-        
-        // 基礎價格 50，每組增加 50
         const price = 50 + (group * 50); 
-        
-        // 最高封頂 300 金幣 (使用 Math.min 確保不會超過 300)
         return Math.min(price, 300);
     };
 
-    // 恢復簡潔的寶物庫渲染邏輯
     window.renderGifts = () => {
         const list = document.getElementById('gift-list');
         list.innerHTML = '';
@@ -629,8 +645,6 @@ const totalGifts = 75; // 暫時只顯示 75 件
         for(let i = 1; i <= totalGifts; i++){
             const id = `gift_${i.toString().padStart(3, '0')}`;
             const isOwned = ownedGifts.includes(id);
-            
-            // 呼叫新函數計算價格
             const price = window.getGiftPrice(i - 1); 
             const onClickAction = isOwned ? `window.showEnlarged('${id}')` : `window.buyGift(${i-1})`;
             
@@ -642,33 +656,21 @@ const totalGifts = 75; // 暫時只顯示 75 件
         }
     };
 
-    // 👇👇👇 補上這個空的防錯函數，避免點擊放大圖片時當機 👇👇👇
-    window.updateGiftNavButtons = () => {
-        // 因為你在 CSS 隱藏了箭頭，這裡不需執行任何動作，但必須存在以防報錯
-    };
-    // 👆👆👆 補到這裡為止 👆👆👆
+    window.updateGiftNavButtons = () => {};
 
-    // 記住而家睇緊 ownedGifts 陣列入面第幾個寶物
     window.currentGiftIndex = 0;
 
     window.showEnlarged = (id) => {
         const modal = document.getElementById('image-modal');
         const img = document.getElementById('enlarged-img');
-        
-        // 喺已擁有嘅寶物清單入面，搵返呢個寶物排第幾
         window.currentGiftIndex = ownedGifts.indexOf(id);
-        
         img.src = `images/${id}.png`;
         modal.classList.remove('hidden');
-        
-        // 更新左右箭頭狀態
         window.updateGiftNavButtons();
     };
 
-    // 左右切換功能
     window.navGift = (dir) => {
         const newIndex = window.currentGiftIndex + dir;
-        // 確保唔會超出範圍
         if (newIndex >= 0 && newIndex < ownedGifts.length) {
             window.currentGiftIndex = newIndex;
             const newId = ownedGifts[window.currentGiftIndex];
@@ -677,26 +679,21 @@ const totalGifts = 75; // 暫時只顯示 75 件
         }
     };
 
-
     window.closeModal = () => { document.getElementById('image-modal').classList.add('hidden'); };    
-window.buyGift = (index) => {
-        // (如果有加入這段防作弊代碼，請把它刪除)
-        // if (index > ownedGifts.length) { ... } 
-
+    
+    window.buyGift = (index) => {
         const id = `gift_${(index + 1).toString().padStart(3, '0')}`;
         if(ownedGifts.includes(id)) return;
         
         const price = window.getGiftPrice(index);
         const msgBox = document.getElementById('message-box');
         
-        // ... 下面的扣除金幣邏輯保持不變        
         if(window.userCoins < price) {
             msgBox.style.color = "red";
             msgBox.innerText = "❌ 金幣不足！快啲去練習賺金幣啦！";
             setTimeout(() => { if (msgBox.innerText.includes("金幣不足")) msgBox.innerText = ""; }, 3000);
             return;
         }
-        
         
         msgBox.style.color = "#16a34a"; 
         msgBox.innerText = "✅ 成功購買寶物！點擊可放大欣賞。";
@@ -705,8 +702,7 @@ window.buyGift = (index) => {
         window.userCoins -= price;
         ownedGifts.push(id);
         
-        // 將扣除後的金幣餘額與新獲得的禮物同步存入 Firebase
-        if (window.currentUsername) {
+        if (window.currentUsername && setDoc && doc && db) {
             setDoc(doc(db, "users", window.currentUsername), { 
                 coins: window.userCoins,               
                 gifts: ownedGifts     
@@ -717,109 +713,92 @@ window.buyGift = (index) => {
         window.renderGifts();
     };
 
-// --- 👆 新增：手機滑動切換寶物圖片功能 ---
     let touchStartX = 0;
     let touchEndX = 0;
-
     const imageModalBox = document.getElementById('image-modal');
 
-    // 當手指碰到螢幕時，記錄 X 座標
     imageModalBox.addEventListener('touchstart', (e) => {
         touchStartX = e.changedTouches[0].screenX;
     }, { passive: true });
 
-    // 當手指離開螢幕時，記錄 X 座標並計算滑動方向
     imageModalBox.addEventListener('touchend', (e) => {
         touchEndX = e.changedTouches[0].screenX;
         handleSwipe();
     }, { passive: true });
 
-// --- 👑 新增：管理員載入數據 (精美表格版) ---
-window.loadAdminData = async () => {
-    try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        const listContainer = document.getElementById('admin-student-list');
-        
-        if (!listContainer) return;
-
-        // 建立表格的標題頭 (Header)
-        let html = `
-            <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; font-size: 0.95rem;">
-                <thead>
-                    <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
-                        <th style="padding: 10px;">👤 名稱</th>
-                        <th style="padding: 10px;">🪙 金幣</th>
-                        <th style="padding: 10px;">🕒 上次登入</th>
-                        <th style="padding: 10px; text-align: center;">⚙️ 操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        // 迴圈讀取每一個學生的資料
-        querySnapshot.forEach((docSnap) => {
-            const username = docSnap.id;
-            const data = docSnap.data();
-            const coins = data.coins || 0;
-            const lastLogin = data.lastLogin || "從未登入";
-
-            // 如果是 admin 自己，就不顯示在學生名單中（或者你想保留也可以，把這行刪掉即可）
-            if (username === "admin") return; 
-
-            // 產生表格內容 (Row)
-            html += `
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 10px; font-weight: bold; color: #1e293b;">${username}</td>
-                    <td style="padding: 10px; color: #f59e0b; font-weight: bold;">${coins}</td>
-                    <td style="padding: 10px; font-size: 0.8rem; color: #64748b;">${lastLogin}</td>
-                    <td style="padding: 10px; text-align: center;">
-                        <button onclick="window.deleteStudent('${username}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">刪除</button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table>`;
-        listContainer.innerHTML = html; // 將表格放進畫面
-
-    } catch (error) {
-        console.error("管理員載入數據失敗:", error);
-    }
-};
-
-// --- 🗑️ 新增：刪除學生的功能 ---
-window.deleteStudent = async (username) => {
-    // 彈出確認視窗，避免不小心按到
-    const isConfirm = confirm(`⚠️ 警告：確定要刪除學生「${username}」的遊戲記錄和金幣嗎？\n此動作無法復原！`);
-    
-    if (isConfirm) {
+    window.loadAdminData = async () => {
         try {
-            // 從 Firebase 資料庫中刪除該學生的文件
-            await deleteDoc(doc(db, "users", username));
-            alert(`✅ 已成功刪除學生「${username}」的資料。`);
-            
-            // 刪除完後，自動重新載入表格，畫面才會更新
-            window.loadAdminData(); 
+            if (!collection || !getDocs || !db) return;
+            const querySnapshot = await getDocs(collection(db, "users"));
+            const listContainer = document.getElementById('admin-student-list');
+            if (!listContainer) return;
+
+            let html = `
+                <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; font-size: 0.95rem;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+                            <th style="padding: 10px;">👤 名稱</th>
+                            <th style="padding: 10px;">🪙 金幣</th>
+                            <th style="padding: 10px;">🕒 上次登入</th>
+                            <th style="padding: 10px; text-align: center;">⚙️ 操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            querySnapshot.forEach((docSnap) => {
+                const username = docSnap.id;
+                const data = docSnap.data();
+                const coins = data.coins || 0;
+                const lastLogin = data.lastLogin || "從未登入";
+
+                if (username === "admin") return; 
+
+                html += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 10px; font-weight: bold; color: #1e293b;">${username}</td>
+                        <td style="padding: 10px; color: #f59e0b; font-weight: bold;">${coins}</td>
+                        <td style="padding: 10px; font-size: 0.8rem; color: #64748b;">${lastLogin}</td>
+                        <td style="padding: 10px; text-align: center;">
+                            <button onclick="window.deleteStudent('${username}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">刪除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            listContainer.innerHTML = html; 
         } catch (error) {
-            alert("❌ 刪除失敗：" + error.message);
+            console.error("管理員載入數據失敗:", error);
         }
-    }
-};
+    };
+
+    window.deleteStudent = async (username) => {
+        const isConfirm = confirm(`⚠️ 警告：確定要刪除學生「${username}」的遊戲記錄和金幣嗎？\n此動作無法復原！`);
+        if (isConfirm) {
+            try {
+                if (!deleteDoc || !doc || !db) return;
+                await deleteDoc(doc(db, "users", username));
+                alert(`✅ 已成功刪除學生「${username}」的資料。`);
+                window.loadAdminData(); 
+            } catch (error) {
+                alert("❌ 刪除失敗：" + error.message);
+            }
+        }
+    };
 
     function handleSwipe() {
-        const threshold = 50; // 設定滑動的最小距離（像素），避免輕微晃動造成的誤觸
-        
-        if (touchEndX < touchStartX - threshold) {
-            // 向左滑動 👈 (下一張)
-            window.navGift(1);
-        }
-        
-        if (touchEndX > touchStartX + threshold) {
-            // 向右滑動 👉 (上一張)
-            window.navGift(-1);
-        }
+        const threshold = 50; 
+        if (touchEndX < touchStartX - threshold) { window.navGift(1); }
+        if (touchEndX > touchStartX + threshold) { window.navGift(-1); }
     }
-
+    
+    // 如果有舊裝置 onvoiceschanged 問題，包裝保護
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            try { window.speechSynthesis.getVoices(); } catch(e) {}
+        };
+    }
 </script>
 </body>
 </html>
