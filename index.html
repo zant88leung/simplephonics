@@ -62,11 +62,11 @@
 
 <div class="app-container">
 <div id="home-view">
-        <div class="main-logo-container" onclick="window.toggleModal(true)"><img src="images/title_logo.png" class="main-logo"></div>
+        <div class="main-logo-container" onclick="window.toggleModal(true)"><img src="images/title_logo.jpg" class="main-logo"></div>
         <div id="main-menu" class="menu-grid"></div>
         
         <div style="padding: 0 15px 20px 15px;">
-            <button onclick="window.location.href='ios_training.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #f97316; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+            <button onclick="window.location.href='training.html'" style="width: 100%; padding: 15px; border-radius: 15px; border: none; background: #f97316; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
                 ⚔️ 練習足夠就可以去挑戰一下
             </button>
         </div>
@@ -219,7 +219,7 @@
         document.getElementById('chapter-heading-text').innerText = chapterNames[k];
         const listHtml = Object.keys(item.sections || {}).sort().map(sk => {
             let skImg = 's' + sk.replace(/[^0-9]/g, '').padStart(2, '0');
-            return `<div onclick="window.openSection('${sk}')"><img src="images/${k}_${skImg}.png" class="btn-card-img" onerror="this.src='images/placeholder.png'"></div>`;
+            return `<div onclick="window.openSection('${sk}')"><img src="images/${k}_${skImg}.jpg" class="btn-card-img" onerror="this.src='images/placeholder.jpg'"></div>`;
         }).join('');
         document.getElementById('section-list').innerHTML = listHtml;
         window.showView('section-view');
@@ -336,7 +336,7 @@
         const menu = document.getElementById('main-menu');
         menu.innerHTML = Object.keys(chapterNames).map(k => {
             const cls = (k === 'ch_a' || k === 'ch_b' || k === 'ch_c' || k === 'ch_d') ? 'small-icon' : 'chapter-icon';
-            return `<div class="menu-card ${cls}" onclick="window.route('${k}')"><img src="images/${k}.png" onerror="this.src='images/placeholder.png'"></div>`;
+            return `<div class="menu-card ${cls}" onclick="window.route('${k}')"><img src="images/${k}.jpg" onerror="this.src='images/placeholder.jpg'"></div>`;
         }).join('');
     }
 
