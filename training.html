@@ -713,19 +713,7 @@
         window.renderGifts();
     };
 
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const imageModalBox = document.getElementById('image-modal');
-
-    imageModalBox.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    imageModalBox.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, { passive: true });
-
+// 這裡保留你原本的管理員功能
     window.loadAdminData = async () => {
         try {
             if (!collection || !getDocs || !db) return;
@@ -787,11 +775,54 @@
         }
     };
 
+    // --- 👇 這裡是全新的 電腦滑鼠/鍵盤 + 手機觸控 切換寶物邏輯 👇 ---
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isDragging = false; // 記錄滑鼠是否正在拖曳
+    const imageModalBox = document.getElementById('image-modal');
+
+    // 📱 1. 手機觸控事件
+    imageModalBox.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    imageModalBox.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    // 🖱️ 2. 電腦滑鼠拖曳事件
+    imageModalBox.addEventListener('mousedown', (e) => {
+        touchStartX = e.clientX;
+        isDragging = true;
+    });
+
+    imageModalBox.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        touchEndX = e.clientX;
+        isDragging = false;
+        handleSwipe();
+    });
+
+    imageModalBox.addEventListener('mouseleave', () => {
+        isDragging = false;
+    });
+
+    // ⌨️ 3. 電腦鍵盤左右方向鍵支援
+    document.addEventListener('keydown', (e) => {
+        const modal = document.getElementById('image-modal');
+        if (!modal.classList.contains('hidden')) {
+            if (e.key === 'ArrowLeft') { window.navGift(-1); }
+            if (e.key === 'ArrowRight') { window.navGift(1); }
+        }
+    });
+
     function handleSwipe() {
         const threshold = 50; 
         if (touchEndX < touchStartX - threshold) { window.navGift(1); }
         if (touchEndX > touchStartX + threshold) { window.navGift(-1); }
     }
+    // --- 👆 滑動邏輯結束 👆 ---
     
     // 如果有舊裝置 onvoiceschanged 問題，包裝保護
     if (window.speechSynthesis) {
