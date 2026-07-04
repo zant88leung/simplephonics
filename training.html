@@ -95,7 +95,7 @@
             <button class="guest-btn" onclick="window.guestLogin()">訪客試玩</button>
             <input id="username" placeholder="名稱 (4-10字)">
 <div style="position: relative; width: 100%; margin: 8px 0;">
-    <input id="password" type="password" placeholder="密碼 (4-8字)" style="margin: 0; width: 100%; padding-right: 40px; box-sizing: border-box;">
+    <input id="password" type="password" placeholder="密碼 (6-8字)" style="margin: 0; width: 100%; padding-right: 40px; box-sizing: border-box;">
     <span id="toggle-pwd" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.2rem; user-select: none;">👁️</span>
 </div>
             <button onclick="window.processAuth()">進入遊戲</button>
@@ -264,12 +264,13 @@
     window.processAuth = async () => {
         if (!auth || !db) return alert("⚠️ 系統無法連線至伺服器。請嘗試使用上面的「訪客試玩」。");
 
-        const u = document.getElementById('username').value.trim();
+// 在 window.processAuth 內，將讀取名稱的一行改為：
+const u = document.getElementById('username').value.trim().toLowerCase();
         const p = document.getElementById('password').value;
         
         if(!u || !p) return alert("請輸入名稱及密碼");
-        if(u !== "admin" && (u.length < 4 || u.length > 10 || p.length < 4 || p.length > 8)) {
-            return alert("名稱4-10字，密碼4-8字");
+        if(u !== "admin" && (u.length < 4 || u.length > 10 || p.length < 6 || p.length > 8)) {
+            return alert("名稱4-10字，密碼6-8字");
         }
         
         const email = `${u}@phonics.internal`;
