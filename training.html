@@ -209,7 +209,7 @@
 
 </div> 
 <script type="module">
-    // 🛡️ 移除靜態 import，改用動態載入，防止腳本一開波就崩潰
+    // 宣告全域變數
     let db, auth;
     let doc, getDoc, setDoc, collection, getDocs, deleteDoc;
     let signInWithEmailAndPassword, createUserWithEmailAndPassword;
@@ -223,30 +223,35 @@
     let mediaRecorder, audioChunks = [];
     let ownedGifts = [];
 
-    // --- 🚀 1. Firebase 動態載入 + try...catch 防禦 ---
-    async function initFirebase() {
-        try {
-            const [appMod, fsMod, authMod] = await Promise.all([
-                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"),
-                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"),
-                import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js")
-            ]);
+    // --- 🚀 優化 1. Firebase 背景載入 (不阻塞 UI) ---
+    // 移除 await，改用 .then()，讓畫面先準備好，Firebase 在背景默默連線
+    Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"),
+        import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js")
+    ]).then(([appMod, fsMod, authMod]) => {
+        const app = appMod.initializeApp({ 
+            apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", 
+            authDomain: "phonics-b096f.firebaseapp.com", 
+            projectId: "phonics-b096f", 
+            storageBucket: "phonics-b096f.firebasestorage.app", 
+            messagingSenderId: "315671176929", 
+            appId: "1:315671176929:web:9c525f86c381b6b0c179a0" 
+        });
+        
+        db = fsMod.getFirestore(app);
+        auth = authMod.getAuth(app);
+        
+        doc = fsMod.doc; getDoc = fsMod.getDoc; setDoc = fsMod.setDoc;
+        collection = fsMod.collection; getDocs = fsMod.getDocs; deleteDoc = fsMod.deleteDoc;
+        signInWithEmailAndPassword = authMod.signInWithEmailAndPassword;
+        createUserWithEmailAndPassword = authMod.createUserWithEmailAndPassword;
+        
+        console.log("✅ Firebase 背景初始化完成");
+    }).catch(error => {
+        console.warn("⚠️ Firebase 載入失敗 (可能是網絡限制):", error);
+    });
 
-            const app = appMod.initializeApp({ apiKey: "AIzaSyBGKgeo-BHkTO4cG8qMcCJiFenOjmQL494", authDomain: "phonics-b096f.firebaseapp.com", projectId: "phonics-b096f", storageBucket: "phonics-b096f.firebasestorage.app", messagingSenderId: "315671176929", appId: "1:315671176929:web:9c525f86c381b6b0c179a0" });
-            
-            db = fsMod.getFirestore(app);
-            auth = authMod.getAuth(app);
-            
-            doc = fsMod.doc; getDoc = fsMod.getDoc; setDoc = fsMod.setDoc;
-            collection = fsMod.collection; getDocs = fsMod.getDocs; deleteDoc = fsMod.deleteDoc;
-            signInWithEmailAndPassword = authMod.signInWithEmailAndPassword;
-            createUserWithEmailAndPassword = authMod.createUserWithEmailAndPassword;
-        } catch (error) {
-            console.warn("⚠️ Firebase 載入失敗 (iOS 無痕模式或網絡限制):", error);
-        }
-    }
-
-    initFirebase();
 
     // --- 👁️ 密碼顯示/隱藏切換功能 ---
     document.getElementById('toggle-pwd').addEventListener('click', function() {
@@ -360,7 +365,7 @@
     };
 
     // --- 🚀 2. loadData 雙重保險 (try...catch + finally) ---
-    async function loadData() {
+async function loadData() {
         if (db) {
             try {
                 const snap = await getDoc(doc(db, "gameConfig", "content"));
@@ -372,12 +377,12 @@
             }
         }
         
-        // 🛡️ 確保無論如何，最後一定會畫出主選單
         const menu = document.getElementById('main-menu');
         if (menu) {
             menu.innerHTML = Object.keys({ch1:1,ch2:2,ch3:3,ch4:4,ch5:5,ch6:6,ch7:7,ch8:8}).map(k => {
                 const imgName = k.replace('ch', 'train'); 
-                return `<div class="menu-card" onclick="window.route('${k}')"><img src="images/${imgName}.jpg"></div>`;
+                // 👇 這裡加了 loading="lazy"
+                return `<div class="menu-card" onclick="window.route('${k}')"><img src="images/${imgName}.jpg" loading="lazy"></div>`;
             }).join('');
         }
     }
@@ -394,8 +399,9 @@
             return;
         }
 
-        document.getElementById('section-list').innerHTML = Object.keys(gameData[k].sections).sort().map(sk => `<div onclick="window.openSection('${sk}')"><img src="images/${k}_s${sk.replace(/[^0-9]/g, '').padStart(2, '0')}.jpg" class="btn-card-img" onerror="this.src='images/placeholder.jpg'"></div>`).join(''); 
-        window.showView('section-view'); 
+        // 👇 這裡加了 loading="lazy"
+        document.getElementById('section-list').innerHTML = Object.keys(gameData[k].sections).sort().map(sk => `<div onclick="window.openSection('${sk}')"><img src="images/${k}_s${sk.replace(/[^0-9]/g, '').padStart(2, '0')}.jpg" class="btn-card-img" loading="lazy" onerror="this.src='images/placeholder.jpg'"></div>`).join(''); 
+        window.showView('section-view');
     };
 
     window.openSection = (sk) => {
@@ -459,10 +465,10 @@
         document.getElementById('next-btn').style.visibility = currentIndex < currentWords.length - 1 ? 'visible' : 'hidden'; 
     };
     
-    // --- 🚀 3. 語音功能保護 (防禦 iOS TTS 錯誤) ---
+ // --- 🚀 優化 4. 語音載入保護 ---
     window.speakTarget = () => {
         if (window.isPlaying) return;
-        if (!window.speechSynthesis) return; // 🛡️ 避免舊裝置不支援語音而當機
+        if (!window.speechSynthesis) return;
 
         const w = currentWords[currentIndex];
         const enWord = (w.parts || []).map(p => p.t).join('');
@@ -475,7 +481,13 @@
         utterance.lang = 'en-GB';
         utterance.rate = 0.85; 
         
-        const voices = window.speechSynthesis.getVoices();
+        // 確保語音清單已載入
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length === 0) {
+            // 如果第一次載入時語音包還沒準備好，稍後重試或直接播放(使用系統預設)
+            console.warn("語音包載入中...");
+        }
+
         let ukVoice = voices.find(v => 
             (v.lang === 'en-GB' || v.lang === 'en_GB') && (
                 (v.name.includes('Google') && v.name.includes('Female')) || 
@@ -485,6 +497,7 @@
         );
         if (!ukVoice) ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
         if (ukVoice) utterance.voice = ukVoice;
+
         
         window.isPlaying = true;
         document.getElementById('demo-btn').style.opacity = '0.5';
@@ -653,9 +666,10 @@
         return Math.min(price, 300);
     };
 
+// --- 🚀 優化 2. 避免 DOM 重複渲染 ---
     window.renderGifts = () => {
         const list = document.getElementById('gift-list');
-        list.innerHTML = '';
+        let htmlContent = ''; // 先準備一個空字串
         
         for(let i = 1; i <= totalGifts; i++){
             const id = `gift_${i.toString().padStart(3, '0')}`;
@@ -663,13 +677,18 @@
             const price = window.getGiftPrice(i - 1); 
             const onClickAction = isOwned ? `window.showEnlarged('${id}')` : `window.buyGift(${i-1})`;
             
-            list.innerHTML += `
+            // 將所有 HTML 加到字串中，加入 loading="lazy"
+            htmlContent += `
                 <div class="gift-item" onclick="${onClickAction}" style="cursor: pointer;">
-                    <img src="images/${id}.jpg" style="filter: ${isOwned ? 'none' : 'grayscale(100%)'}; opacity: ${isOwned ? '1' : '0.5'}; transition: all 0.3s;">
+                    <img src="images/${id}.jpg" loading="lazy" style="filter: ${isOwned ? 'none' : 'grayscale(100%)'}; opacity: ${isOwned ? '1' : '0.5'}; transition: all 0.3s;">
                     <div class="price-tag" style="color: ${isOwned ? '#999' : '#e11d48'}; font-weight: ${isOwned ? 'normal' : 'bold'};">${isOwned ? '已擁有' : `💰${price}`}</div>
                 </div>`;
         }
+        
+        // 迴圈跑完後，一次過更新畫面 (效能大幅提升)
+        list.innerHTML = htmlContent;
     };
+
 
     window.updateGiftNavButtons = () => {};
 
