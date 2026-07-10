@@ -260,12 +260,11 @@
         }
     });
 
-    // --- ☁️ 登入邏輯 (加入防禦) ---
+ // --- ☁️ 登入邏輯 (修復 Auth 與 Firestore 同步及半註冊問題) ---
     window.processAuth = async () => {
         if (!auth || !db) return alert("⚠️ 系統無法連線至伺服器。請嘗試使用上面的「訪客試玩」。");
 
-// 在 window.processAuth 內，將讀取名稱的一行改為：
-const u = document.getElementById('username').value.trim().toLowerCase();
+        const u = document.getElementById('username').value.trim().toLowerCase();
         const p = document.getElementById('password').value;
         
         if(!u || !p) return alert("請輸入名稱及密碼");
@@ -277,6 +276,7 @@ const u = document.getElementById('username').value.trim().toLowerCase();
         const nowStr = new Date().toLocaleString('zh-HK', { hour12: false });
         
         try {
+            // 1. 先嘗試正常登入
             await signInWithEmailAndPassword(auth, email, p);
             
             if (u === "admin") {
@@ -285,37 +285,51 @@ const u = document.getElementById('username').value.trim().toLowerCase();
                 return; 
             }
             
+            // 登入成功，讀取 Firestore 資料
             const snap = await getDoc(doc(db, "users", u));
             window.currentUsername = u; 
-            window.totalRecordings = snap.exists() ? (snap.data().recordings || 0) : 0;
-            const currentCoins = snap.exists() ? (snap.data().coins || 0) : 0;
-            const currentGifts = snap.exists() ? (snap.data().gifts || []) : []; 
             
-            await setDoc(doc(db, "users", u), { lastLogin: nowStr }, { merge: true });
-            finishLogin(currentCoins, currentGifts, false);
+            if (snap.exists()) {
+                // 資料存在，正常載入金幣與進度
+                window.totalRecordings = snap.data().recordings || 0;
+                const currentCoins = snap.data().coins || 0;
+                const currentGifts = snap.data().gifts || []; 
+                await setDoc(doc(db, "users", u), { lastLogin: nowStr }, { merge: true });
+                finishLogin(currentCoins, currentGifts, false);
+            } else {
+                // ⚠️ 核心修復機制：如果 Auth 有這名學生，但 Firestore 卻找不到！
+                // (可能之前註冊時斷線)，這裡會自動幫他「補回」初始化的資料，解決後台看不到 user 的問題！
+                window.totalRecordings = 0;
+                await setDoc(doc(db, "users", u), { password: p, coins: 0, recordings: 0, gifts: [], lastLogin: nowStr });
+                finishLogin(0, [], false);
+            }
             
         } catch (err) {
-            try {
-                await createUserWithEmailAndPassword(auth, email, p);
-                if (u === "admin") return alert("管理員帳號不可由前端建立！");
-                
-                const snap = await getDoc(doc(db, "users", u));
-                window.currentUsername = u; 
-                
-                if (snap.exists()) {
-                    window.totalRecordings = snap.data().recordings || 0;
-                    const currentCoins = snap.data().coins || 0;
-                    const currentGifts = snap.data().gifts || []; 
-                    await setDoc(doc(db, "users", u), { lastLogin: nowStr }, { merge: true });
-                    finishLogin(currentCoins, currentGifts, false);
-                } else {
+            // 2. 登入失敗 (可能是因為全新帳號，或是密碼打錯)
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-login-credentials' || err.code === 'auth/invalid-credential') {
+                try {
+                    // 嘗試當作「新學生」自動註冊
+                    await createUserWithEmailAndPassword(auth, email, p);
+                    if (u === "admin") return alert("管理員帳號不可由前端建立！");
+                    
+                    window.currentUsername = u; 
                     window.totalRecordings = 0;
+                    
+                    // 註冊成功後，立刻建立 Firestore 資料
                     await setDoc(doc(db, "users", u), { password: p, coins: 0, recordings: 0, gifts: [], lastLogin: nowStr });
                     finishLogin(0, [], false);
+                    
+                } catch (regErr) {
+                    if (regErr.code === 'auth/email-already-in-use') {
+                        // 帳號已經被註冊過，代表其實是他「密碼打錯了」
+                        alert("❌ 密碼錯誤！請重新輸入。");
+                    } else {
+                        alert("系統異常，無法自動註冊：" + regErr.message);
+                    }
                 }
-            } catch (regErr) {
-                if (regErr.code === 'auth/email-already-in-use') alert("❌ 密碼錯誤！請重新輸入。");
-                else alert("系統異常，請稍後再試：" + regErr.message);
+            } else {
+                // 處理其他未知的網絡錯誤
+                alert("登入發生錯誤：" + err.message);
             }
         }
     };
